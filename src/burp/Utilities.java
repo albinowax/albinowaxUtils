@@ -25,7 +25,7 @@ import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
-    public static final String version = "0.12";
+    public static final String version = "0.13";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -853,7 +853,7 @@ class Utilities {
     }
 
     public static boolean containsBytes(byte[] request, byte[] value) {
-        return helpers.indexOf(request, value, false, 1, request.length) != -1;
+        return helpers.indexOf(request, value, false, 0, request.length) != -1;
     }
 
     public static byte[] setHeader(byte[] request, String header, String value) {
