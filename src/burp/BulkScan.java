@@ -51,6 +51,7 @@ class BulkScanLauncher {
         Utilities.globalSettings.registerSetting("confirmations", 5);
         Utilities.globalSettings.registerSetting("report tentative", true);
         Utilities.globalSettings.registerSetting("timeout", 10);
+        Utilities.globalSettings.registerSetting("include origin in cachebusters", true);
 
         ScanPool taskEngine = new ScanPool(Utilities.globalSettings.getInt("thread pool size"), Utilities.globalSettings.getInt("thread pool size"), 10, TimeUnit.MINUTES, tasks);
         Utilities.globalSettings.registerListener("thread pool size", value -> {
@@ -542,6 +543,7 @@ abstract class Scan implements IScannerCheck {
         }
 
         IHttpRequestResponse resp = null;
+        Utilities.requestCount.incrementAndGet();
         long startTime = System.currentTimeMillis();
         if (loader == null) {
             int attempts = 0;
@@ -616,6 +618,12 @@ class Resp {
 
     private long timestamp = 0;
 
+    public long getResponseTime() {
+        return responseTime;
+    }
+
+    private long responseTime = 0;
+
     public short getStatus() {
         return status;
     }
@@ -641,7 +649,8 @@ class Resp {
                 this.failed = true;
             }
         } else {
-            if ((System.currentTimeMillis() - startTime) > scanTimeout) {
+            responseTime = System.currentTimeMillis() - startTime;
+            if (responseTime > scanTimeout) {
                 if (req.getResponse() != null) {
                     Utilities.out("TImeout with response. Start time: " + startTime + " Current time: " + System.currentTimeMillis() + " Difference: " + (System.currentTimeMillis() - startTime) + " Tolerance: " + scanTimeout);
                 }

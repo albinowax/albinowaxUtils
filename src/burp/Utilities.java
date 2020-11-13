@@ -25,7 +25,7 @@ import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
-    public static final String version = "0.13";
+    public static final String version = "0.16";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -518,6 +518,14 @@ class Utilities {
         return count;
     }
 
+    static int countMatches(Resp response, String match){
+        byte[] resp = response.getReq().getResponse();
+        if (resp == null || resp.length == 0) {
+            return 0;
+        }
+        return countMatches(resp, match.getBytes());
+    }
+
     static int countMatches(byte[] response, byte[] match) {
         int matches = 0;
         if (match.length < 4) {
@@ -549,11 +557,17 @@ class Utilities {
         return replace(request, find, replace, 1);
     }
 
+
     private static byte[] replace(byte[] request, byte[] find, byte[] replace, int limit) {
         List<int[]> matches = getMatches(request, find, -1);
         if (limit != -1 && limit < matches.size()) {
             matches = matches.subList(0, limit);
         }
+
+        if (matches.size() == 0) {
+            return request;
+        }
+
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             for (int i=0;i<matches.size();i++) {
@@ -853,7 +867,18 @@ class Utilities {
     }
 
     public static boolean containsBytes(byte[] request, byte[] value) {
+        if (request == null) {
+            return false;
+        }
         return helpers.indexOf(request, value, false, 0, request.length) != -1;
+    }
+
+    static boolean contains(Resp response, String match){
+        byte[] resp = response.getReq().getResponse();
+        if (resp == null || resp.length == 0) {
+            return false;
+        }
+        return helpers.indexOf(resp, match.getBytes(), false, 0, resp.length) != -1;
     }
 
     public static byte[] setHeader(byte[] request, String header, String value) {
