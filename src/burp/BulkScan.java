@@ -454,7 +454,7 @@ abstract class ParamScan extends Scan {
 }
 
 abstract class Scan implements IScannerCheck {
-    ZgrabLoader loader = null;
+    static ZgrabLoader loader = null;
     String name = "";
 
     Scan(String name) {
@@ -527,11 +527,11 @@ abstract class Scan implements IScannerCheck {
         }
     }
 
-    Resp request(IHttpService service, byte[] req) {
+    static Resp request(IHttpService service, byte[] req) {
         return request(service, req, 0);
     }
 
-    Resp request(IHttpService service, byte[] req, int maxRetries) {
+    static Resp request(IHttpService service, byte[] req, int maxRetries) {
         if (Utilities.unloaded.get()) {
             throw new RuntimeException("Aborting due to extension unload");
         }
@@ -643,20 +643,22 @@ class Resp {
         int burpTimeout = Integer.parseInt(Utilities.getSetting("project_options.connections.timeouts.normal_timeout"));
         int scanTimeout = Utilities.globalSettings.getInt("timeout") * 1000;
 
+        responseTime = System.currentTimeMillis() - startTime;
         if (burpTimeout == scanTimeout) {
-            if (req.getResponse() == null) {
-                this.timedOut = true;
+            if (req.getResponse() == null || req.getResponse().length == 0) {
                 this.failed = true;
+                if (responseTime > scanTimeout) {
+                    this.timedOut = true;
+                }
             }
         } else {
-            responseTime = System.currentTimeMillis() - startTime;
             if (responseTime > scanTimeout) {
-                if (req.getResponse() != null) {
+                if (req.getResponse() != null && req.getResponse().length != 0) {
                     Utilities.out("TImeout with response. Start time: " + startTime + " Current time: " + System.currentTimeMillis() + " Difference: " + (System.currentTimeMillis() - startTime) + " Tolerance: " + scanTimeout);
                 }
                 this.timedOut = true;
                 this.failed = true;
-            } else if (req.getResponse() == null) {
+            } else if (req.getResponse() == null || req.getResponse().length == 0) {
                 this.failed = true;
             }
         }
