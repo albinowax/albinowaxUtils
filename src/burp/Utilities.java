@@ -990,7 +990,7 @@ class Utilities {
     }
 
     static boolean isResponse(byte[] data) {
-        byte[] start = Arrays.copyOfRange(data, 0, 4);
+        byte[] start = Arrays.copyOfRange(data, 0, 5);
         return (helpers.bytesToString(start).equals("HTTP/"));
     }
 
