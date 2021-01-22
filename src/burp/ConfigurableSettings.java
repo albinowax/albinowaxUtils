@@ -13,6 +13,7 @@ import java.awt.event.ActionListener;
 
 class ConfigMenu implements Runnable, MenuListener, IExtensionStateListener{
     private JMenu menuButton;
+    private JMenuItem menuItem;
 
     ConfigMenu() {
         Utilities.callbacks.registerExtensionStateListener(this);
@@ -20,18 +21,29 @@ class ConfigMenu implements Runnable, MenuListener, IExtensionStateListener{
 
     public void run()
     {
-        menuButton = new JMenu("Param Miner");
-        menuButton.addMenuListener(this);
+        menuButton = new JMenu(Utilities.name);
+        menuItem = new JMenuItem(new AbstractAction("Settings") {
+            public void actionPerformed(ActionEvent ae) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run(){
+                        Utilities.globalSettings.showSettings();
+                    }
+                });
+            }
+        });
+
+        menuButton.add(menuItem);
         JMenuBar burpMenuBar = Utilities.getBurpFrame().getJMenuBar();
         burpMenuBar.add(menuButton);
+        burpMenuBar.repaint();
     }
 
     public void menuSelected(MenuEvent e) {
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run(){
-                Utilities.globalSettings.showSettings();
-            }
-        });
+//        SwingUtilities.invokeLater(new Runnable() {
+//            public void run(){
+//                Utilities.globalSettings.showSettings();
+//            }
+//        });
     }
 
     public void menuDeselected(MenuEvent e) { }

@@ -30,7 +30,7 @@ class Utilities {
     private static PrintWriter stdout;
     private static PrintWriter stderr;
     static final boolean DEBUG = false;
-
+    static boolean chopNestedResponses = false;
     static final byte CONFIRMATIONS = 5;
 
     static final boolean CACHE_ONLY = false;
@@ -1109,8 +1109,15 @@ class Utilities {
         boolean GO_ACCELERATOR = false;
         IHttpRequestResponse result = null;
         long start = 0;
+        int maxAttempts = 3;
 
-        for(int attempt=1; attempt<3; attempt++) {
+        boolean expectNestedResponse = false;
+        if (chopNestedResponses && Utilities.containsBytes(Utilities.getBodyBytes(req), "HTTP/1".getBytes())) {
+            expectNestedResponse = true;
+            maxAttempts = 20;
+        }
+
+        for(int attempt=1; attempt<maxAttempts; attempt++) {
             try {
                 if (LOG_PERFORMANCE) {
                     requestCount.incrementAndGet();
@@ -1132,16 +1139,28 @@ class Utilities {
 
             if (result.getResponse() == null) {
                 Utilities.log("Req failed, retrying...");
+                continue;
                 //requestResponse.setResponse(new byte[0]);
             }
-            else {
-                if (LOG_PERFORMANCE) {
-                    long duration = System.currentTimeMillis() - start;
-                    Utilities.out("Time: "+duration);
-                    //requestTimes.add(duration);
+
+            if (expectNestedResponse) {
+                byte[] body = getBodyBytes(result.getResponse());
+                if (!containsBytes(body, "HTTP/".getBytes())) {
+                    //Utilities.out("Missing nested response, retrying...");
+                    result.setResponse(null);
+                    continue;
                 }
-                break;
+                int nestedRespStart = helpers.indexOf(body, "HTTP/".getBytes(), false, 0, body.length);
+                result.setResponse(Arrays.copyOfRange(body, nestedRespStart, body.length));
             }
+
+            if (LOG_PERFORMANCE) {
+                long duration = System.currentTimeMillis() - start;
+                Utilities.out("Time: "+duration);
+                //requestTimes.add(duration);
+            }
+            break;
+
         }
 
         if (result == null || result.getResponse() == null) {
