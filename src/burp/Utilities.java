@@ -25,7 +25,7 @@ import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
-    public static final String version = "0.16";
+    public static final String version = "0.17";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -934,6 +934,19 @@ class Utilities {
         return null;
     }
 
+    public static PartialParam paramify(byte[] request, String name, String target) {
+//        // todo pass in value maybe
+//        if (target.length() != basevalue.length()) {
+//            throw new RuntimeException("target length must equal basevalue length");
+//        }
+        int start = Utilities.helpers.indexOf(request, target.getBytes(), true, 0, request.length);
+        if (start == -1) {
+            throw new RuntimeException("Failed to find target");
+        }
+        int end = start + target.length();
+        return new PartialParam(name, start, end);
+    }
+
     public static byte[] addOrReplaceHeader(byte[] request, String header, String value) {
         if (getHeaderOffsets(request, header) != null) {
             return setHeader(request, header, value);
@@ -1009,6 +1022,30 @@ class Utilities {
 //
 //    }
 
+    static List<IParameter> getHeaderInsertionPoints(byte[] request, String[] to_poison) {
+        List<IParameter> params = new ArrayList<>();
+        int end = getBodyStart(request);
+        int i = 0;
+        while(request[i++] != '\n' && i < end) {}
+        while(i<end) {
+            int line_start = i;
+            while(i < end && request[i++] != ' ') {}
+            byte[] header_name = Arrays.copyOfRange(request, line_start, i-2);
+            int headerValueStart = i;
+            while(i < end && request[i++] != '\n') {}
+            if (i == end) { break; }
+
+            String header_str = helpers.bytesToString(header_name);
+            for (String header: to_poison) {
+                if (header.equals(header_str)) {
+                    params.add(new PartialParam(header, headerValueStart, i-2));
+                }
+            }
+        }
+        return params;
+    }
+
+
     static List<IParameter> getExtraInsertionPoints(byte[] request) { //
         List<IParameter> params = new ArrayList<>();
         int end = getBodyStart(request);
@@ -1028,22 +1065,7 @@ class Utilities {
         while(request[i++] != '\n' && i < end) {}
 
         String[] to_poison = {"User-Agent", "Referer", "X-Forwarded-For", "Host"};
-        while(i<end) {
-            int line_start = i;
-            while(i < end && request[i++] != ' ') {}
-            byte[] header_name = Arrays.copyOfRange(request, line_start, i-2);
-            int headerValueStart = i;
-            while(i < end && request[i++] != '\n') {}
-            if (i == end) { break; }
-
-            String header_str = helpers.bytesToString(header_name);
-            for (String header: to_poison) {
-                if (header.equals(header_str)) {
-                    params.add(new PartialParam(header, headerValueStart, i-2));
-                }
-            }
-        }
-
+        params.addAll(getHeaderInsertionPoints(request, to_poison));
 
         return params;
     }

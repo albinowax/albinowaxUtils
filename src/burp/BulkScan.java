@@ -42,16 +42,25 @@ class BulkScanLauncher {
         Utilities.globalSettings.registerSetting("key content-type", true);
         Utilities.globalSettings.registerSetting("key server", true);
         Utilities.globalSettings.registerSetting("key header names", false);
-        Utilities.globalSettings.registerSetting("param-scan cookies", false);
+
         Utilities.globalSettings.registerSetting("filter", "");
         Utilities.globalSettings.registerSetting("mimetype-filter", "");
         Utilities.globalSettings.registerSetting("resp-filter", "");
-        Utilities.globalSettings.registerSetting("add dummy param", false);
-        Utilities.globalSettings.registerSetting("dummy param name", "utm_campaign");
         Utilities.globalSettings.registerSetting("confirmations", 5);
         Utilities.globalSettings.registerSetting("report tentative", true);
         Utilities.globalSettings.registerSetting("timeout", 10);
         Utilities.globalSettings.registerSetting("include origin in cachebusters", true);
+
+
+        Utilities.globalSettings.registerSetting("params: dummy", false);
+        //Utilities.globalSettings.registerSetting("params: cookies", false);
+        //Utilities.globalSettings.registerSetting("special params", false);
+        Utilities.globalSettings.registerSetting("dummy param name", "utm_campaign");
+        Utilities.globalSettings.registerSetting("params: query", true);
+        Utilities.globalSettings.registerSetting("params: scheme", false);
+        Utilities.globalSettings.registerSetting("params: scheme-host", false);
+        Utilities.globalSettings.registerSetting("params: scheme-path", false);
+
 
         ScanPool taskEngine = new ScanPool(Utilities.globalSettings.getInt("thread pool size"), Utilities.globalSettings.getInt("thread pool size"), 10, TimeUnit.MINUTES, tasks);
         Utilities.globalSettings.registerListener("thread pool size", value -> {
@@ -85,130 +94,137 @@ class BulkScan implements Runnable  {
     }
 
     public void run() {
-        long start = System.currentTimeMillis();
-        ScanPool taskEngine = BulkScanLauncher.getTaskEngine();
+        try {
+            long start = System.currentTimeMillis();
+            ScanPool taskEngine = BulkScanLauncher.getTaskEngine();
 
-        int queueSize = taskEngine.getQueue().size();
-        Utilities.log("Adding "+reqs.length+" tasks to queue of "+queueSize);
-        queueSize += reqs.length;
-        int thread_count = taskEngine.getCorePoolSize();
-
-
-        //ArrayList<IHttpRequestResponse> reqlist = new ArrayList<>(Arrays.asList(reqs));
-
-        ArrayList<ScanItem> reqlist = new ArrayList<>();
-        for (IHttpRequestResponse req: reqs) {
-            reqlist.add(new ScanItem(req, config, scan));
-        }
-        Collections.shuffle(reqlist);
-
-        int cache_size = queueSize; //thread_count;
-
-        Set<String> keyCache = new HashSet<>();
-
-        Queue<String> cache = new CircularFifoQueue<>(cache_size);
-        HashSet<String> remainingHosts = new HashSet<>();
-
-        int i = 0;
-        int queued = 0;
-        boolean remove;
-        int prepared = 0;
-        int totalRequests = reqlist.size();
-        String filter = Utilities.globalSettings.getString("filter");
-        String respFilter = Utilities.globalSettings.getString("resp-filter");
-        boolean applyRespFilter = !"".equals(respFilter);
-        boolean applyFilter = !"".equals(filter);
-        String mimeFilter = Utilities.globalSettings.getString("mimetype-filter");
-        boolean applyMimeFilter = !"".equals(mimeFilter);
-
-        // every pass adds at least one item from every host
-        while(!reqlist.isEmpty()) {
-            Utilities.out("Loop "+i++);
-            ListIterator<ScanItem> left = reqlist.listIterator();
-            while (left.hasNext()) {
-                remove = true;
-                ScanItem req = left.next();
+            int queueSize = taskEngine.getQueue().size();
+            Utilities.log("Adding " + reqs.length + " tasks to queue of " + queueSize);
+            queueSize += reqs.length;
+            int thread_count = taskEngine.getCorePoolSize();
 
 
-                if (applyFilter && !Utilities.containsBytes(req.req.getRequest(), filter.getBytes())) {
-                    left.remove();
-                    continue;
-                }
+            //ArrayList<IHttpRequestResponse> reqlist = new ArrayList<>(Arrays.asList(reqs));
 
-                if (applyMimeFilter) {
-                    byte[] resp = req.req.getResponse();
-                    if (resp == null) {
-                        if (!Utilities.getHeader(req.req.getRequest(), "Accept").toLowerCase().contains(mimeFilter)) {
-                            left.remove();
-                            continue;
-                        }
-                    }
-                    else {
-                        if (!Utilities.getHeader(req.req.getResponse(), "Content-Type").toLowerCase().contains(mimeFilter)) {
-                            left.remove();
-                            continue;
-                        }
-                    }
-                }
+            ArrayList<ScanItem> reqlist = new ArrayList<>();
+            for (IHttpRequestResponse req : reqs) {
+                reqlist.add(new ScanItem(req, config, scan));
+            }
+            Collections.shuffle(reqlist);
 
-                // fixme doesn't actually work - maybe the resp is always null?
-                if (applyRespFilter) {
-                    byte[] resp = req.req.getResponse();
-                    if (resp == null || !Utilities.containsBytes(resp, respFilter.getBytes())) {
-                        Utilities.log("Skipping request due to response filter");
+            int cache_size = queueSize; //thread_count;
+
+            Set<String> keyCache = new HashSet<>();
+
+            Queue<String> cache = new CircularFifoQueue<>(cache_size);
+            HashSet<String> remainingHosts = new HashSet<>();
+
+            int i = 0;
+            int queued = 0;
+            boolean remove;
+            int prepared = 0;
+            int totalRequests = reqlist.size();
+            String filter = Utilities.globalSettings.getString("filter");
+            String respFilter = Utilities.globalSettings.getString("resp-filter");
+            boolean applyRespFilter = !"".equals(respFilter);
+            boolean applyFilter = !"".equals(filter);
+            String mimeFilter = Utilities.globalSettings.getString("mimetype-filter");
+            boolean applyMimeFilter = !"".equals(mimeFilter);
+
+            // every pass adds at least one item from every host
+            while (!reqlist.isEmpty()) {
+                Utilities.out("Loop " + i++);
+                ListIterator<ScanItem> left = reqlist.listIterator();
+                while (left.hasNext()) {
+                    remove = true;
+                    ScanItem req = left.next();
+
+
+                    if (applyFilter && !Utilities.containsBytes(req.req.getRequest(), filter.getBytes())) {
                         left.remove();
                         continue;
                     }
-                }
 
-                String host = req.host;
-                if (cache.contains(host)) {
-                    remainingHosts.add(host);
-                    continue;
-                }
-
-
-                if (scan instanceof ParamScan && !req.prepared()) {
-                    ArrayList<ScanItem> newItems = req.prepare();
-                    Utilities.log("Prepared "+prepared + " of "+totalRequests);
-                    prepared++;
-                    left.remove();
-                    remove = false;
-                    if (newItems.size() == 0) {
-                        continue;
-                    }
-                    req = newItems.remove(0);
-                    for (ScanItem item: newItems) {
-                        if(!keyCache.contains(item.getKey())) {
-                            left.add(item);
+                    if (applyMimeFilter) {
+                        byte[] resp = req.req.getResponse();
+                        if (resp == null) {
+                            if (!Utilities.getHeader(req.req.getRequest(), "Accept").toLowerCase().contains(mimeFilter)) {
+                                left.remove();
+                                continue;
+                            }
+                        } else {
+                            if (!Utilities.getHeader(req.req.getResponse(), "Content-Type").toLowerCase().contains(mimeFilter)) {
+                                left.remove();
+                                continue;
+                            }
                         }
                     }
-                }
 
-                if (config.getBoolean("use key")) {
-                    String key = req.getKey();
-                    if (keyCache.contains(key)) {
-                        if (remove) {
+                    // fixme doesn't actually work - maybe the resp is always null?
+                    if (applyRespFilter) {
+                        byte[] resp = req.req.getResponse();
+                        if (resp == null || !Utilities.containsBytes(resp, respFilter.getBytes())) {
+                            Utilities.log("Skipping request due to response filter");
                             left.remove();
+                            continue;
                         }
+                    }
+
+                    String host = req.host;
+                    if (cache.contains(host)) {
+                        remainingHosts.add(host);
                         continue;
                     }
-                    keyCache.add(key);
+
+
+                    if (scan instanceof ParamScan && !req.prepared()) {
+                        ArrayList<ScanItem> newItems = req.prepare();
+                        //Utilities.log("Prepared " + prepared + " of " + totalRequests);
+                        prepared++;
+                        left.remove();
+                        remove = false;
+                        if (newItems.size() == 0) {
+                            //Utilities.log("No params in request");
+                            continue;
+                        }
+                        req = newItems.remove(0);
+                        for (ScanItem item : newItems) {
+                            String key = item.getKey();
+                            //Utilities.log("Param Key: "+key);
+                            if (!keyCache.contains(key)) {
+                                left.add(item);
+                            }
+                        }
+                    }
+
+                    if (config.getBoolean("use key")) {
+                        String key = req.getKey();
+                        if (keyCache.contains(key)) {
+                            if (remove) {
+                                left.remove();
+                            }
+                            continue;
+                        }
+                        keyCache.add(key);
+                    }
+
+                    cache.add(host);
+                    if (remove) {
+                        left.remove();
+                    }
+                    Utilities.log("Adding request on " + host + " to queue");
+                    queued++;
+                    taskEngine.execute(new BulkScanItem(scan, req));
                 }
 
-                cache.add(host);
-                if (remove) {
-                    left.remove();
-                }
-                Utilities.log("Adding request on "+host+" to queue");
-                queued++;
-                taskEngine.execute(new BulkScanItem(scan, req));
+                cache = new CircularFifoQueue<>(max(min(remainingHosts.size() - 1, thread_count), 1));
             }
 
-            cache = new CircularFifoQueue<>(max(min(remainingHosts.size()-1, thread_count), 1));
+            Utilities.out("Queued " + queued + " attacks from " + totalRequests + " requests in " + (System.currentTimeMillis() - start) / 100 + " seconds");
+        } catch (Exception e) {
+            Utilities.out("Queue aborted due to exception");
+            Utilities.showError(e);
         }
-
-        Utilities.out("Queued " + queued + " attacks from "+ totalRequests + " requests in "+(System.currentTimeMillis()-start)/100+" seconds");
     }
 }
 
@@ -257,11 +273,36 @@ class ScanItem {
 //                return items;
 //            }
 //        }
+        prepared = true;
+
+        if (Utilities.containsBytes(req.getResponse(), "HTTP/2".getBytes())) {
+            if (Utilities.globalSettings.getBoolean("params: scheme")) {
+                byte[] updated = Utilities.addOrReplaceHeader(req.getRequest(), ":scheme", "m838jacxka");
+                Req newReq = new Req(updated, req.getResponse(), req.getHttpService());
+                items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-proto", "m838jacxka")));
+            }
+
+            if (Utilities.globalSettings.getBoolean("params: scheme-path")) {
+                byte[] updated = Utilities.addOrReplaceHeader(req.getRequest(), ":scheme", "https://" + req.getHttpService().getHost() + "/m838jacxka");
+                Req newReq = new Req(updated, req.getResponse(), req.getHttpService());
+                items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-path", "m838jacxka")));
+            }
+
+            if (Utilities.globalSettings.getBoolean("params: scheme-host")) {
+                byte[] updated = Utilities.addOrReplaceHeader(req.getRequest(), ":scheme", "https://m838jacxka/");
+                Req newReq = new Req(updated, req.getResponse(), req.getHttpService());
+                items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-host", "m838jacxka")));
+            }
+        }
+
+
+        if (!Utilities.globalSettings.getBoolean("params: query")) {
+            return items;
+        }
 
         // don't waste time analysing GET requests with no = in the request line
         if (!Utilities.getPathFromRequest(req.getRequest()).contains("=")) {
-            if (!Utilities.globalSettings.getBoolean("add dummy param")) {
-                prepared = true;
+            if (!Utilities.globalSettings.getBoolean("params: dummy")) {
                 return items;
             }
 
@@ -269,7 +310,7 @@ class ScanItem {
             // fixme somehow triggers a stackOverflow
         }
 
-        if (Utilities.globalSettings.getBoolean("add dummy param")) {
+        if (Utilities.globalSettings.getBoolean("params: dummy")) {
             req = new Req(Utilities.appendToQuery(req.getRequest(), Utilities.globalSettings.getString("dummy param name")+"=z"), req.getResponse(), req.getHttpService());
         }
 
@@ -286,7 +327,6 @@ class ScanItem {
             }
             items.add(new ScanItem(req, config, scan, param));
         }
-        prepared = true;
         return items;
     }
 

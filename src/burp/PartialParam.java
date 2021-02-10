@@ -2,7 +2,7 @@ package burp;
 
 class PartialParam implements IParameter {
 
-    private int valueStart, valueEnd;
+    int valueStart, valueEnd;
     private String name;
     private byte type;
 
