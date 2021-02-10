@@ -1,6 +1,7 @@
 package burp;
 
 import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -25,7 +26,7 @@ import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
-    public static final String version = "0.17ZZ";
+    public static final String version = "0.2";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -214,6 +215,56 @@ class Utilities {
             }
         }
         return out.toString();
+    }
+
+    static boolean mightBeOrderBy(String name, String value) {
+        return (name.toLowerCase().contains("order") ||
+                name.toLowerCase().contains("sort")) ||
+                value.toLowerCase().equals("asc") ||
+                value.toLowerCase().equals("desc") ||
+                (StringUtils.isNumeric(value) && Double.parseDouble(value) <= 1000) ||
+                (value.length() < 20 && StringUtils.isAlpha(value));
+    }
+
+    static boolean mightBeIdentifier(String value) {
+        for (int i=0; i<value.length(); i++) {
+            char x = value.charAt(i);
+            if (!(CharUtils.isAsciiAlphanumeric(x) || x == '.' || x == '-' || x == '_' || x == ':' || x == '$') ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static Attack buildTransformationAttack(IHttpRequestResponse baseRequestResponse, IScannerInsertionPoint insertionPoint, String leftAnchor, String payload, String rightAnchor) {
+
+        IHttpRequestResponse req = attemptRequest(baseRequestResponse.getHttpService(),
+                insertionPoint.buildRequest(helpers.stringToBytes(insertionPoint.getBaseValue() + leftAnchor + payload + rightAnchor)));
+
+        return new Attack(Utilities.highlightRequestResponse(req, leftAnchor, leftAnchor+payload+rightAnchor, insertionPoint), null, payload, "");
+    }
+
+    static boolean isInPath(IScannerInsertionPoint insertionPoint) {
+        byte type = insertionPoint.getInsertionPointType();
+        boolean isInPath = (type == IScannerInsertionPoint.INS_URL_PATH_FILENAME ||
+                type == IScannerInsertionPoint.INS_URL_PATH_FOLDER);
+
+        if (!isInPath && type == IScannerInsertionPoint.INS_USER_PROVIDED) {
+            final String injectionCanary = "zxcvcxz";
+            String path = Utilities.getPathFromRequest(insertionPoint.buildRequest(injectionCanary.getBytes()));
+            if (path.contains(injectionCanary)) {
+                if (path.contains("?")) {
+                    if (path.indexOf(injectionCanary) < path.indexOf("?")) {
+                        isInPath = true;
+                    }
+                }
+                else {
+                    isInPath = true;
+                }
+            }
+        }
+
+        return isInPath;
     }
 
     static boolean invertable(String value) {
