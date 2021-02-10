@@ -405,7 +405,8 @@ class TriggerBulkScan implements ActionListener {
             this.reqs = new IHttpRequestResponse[issues.length];
             for (int i=0; i<issues.length; i++) {
                 IScanIssue issue = issues[i];
-                reqs[i] = new Req(Utilities.helpers.buildHttpRequest(issue.getUrl()), null, issue.getHttpService());
+                reqs[i] = issue.getHttpMessages()[0];
+                //reqs[i] = new Req(Utilities.helpers.buildHttpRequest(issue.getUrl()), null, issue.getHttpService());
             }
         }
 
