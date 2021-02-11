@@ -470,7 +470,7 @@ class BulkScanItem implements Runnable {
             if (scanner instanceof ParamScan) {
                 scanner.doActiveScan(baseReq, baseItem.insertionPoint);
             } else {
-                scanner.doScan(baseReq.getRequest(), this.baseReq.getHttpService());
+                scanner.doScan(baseReq);
             }
             ScanPool engine = BulkScanLauncher.getTaskEngine();
             long done = engine.getCompletedTaskCount() + 1;
@@ -506,7 +506,13 @@ abstract class Scan implements IScannerCheck {
         //Utilities.callbacks.registerScannerCheck(this);
     }
 
-    abstract List<IScanIssue> doScan(byte[] baseReq, IHttpService service);
+    List<IScanIssue> doScan(byte[] baseReq, IHttpService service) {
+        throw new RuntimeException("doScan(byte[] baseReq, IHttpService service) invoked but not implemented");
+    }
+
+    List<IScanIssue> doScan(IHttpRequestResponse baseRequestResponse) {
+        return doScan(baseRequestResponse.getRequest(), baseRequestResponse.getHttpService());
+    }
 
     @Override
     public List<IScanIssue> doActiveScan(IHttpRequestResponse baseRequestResponse, IScannerInsertionPoint insertionPoint) {
