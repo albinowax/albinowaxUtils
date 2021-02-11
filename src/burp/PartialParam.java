@@ -5,16 +5,26 @@ class PartialParam implements IParameter {
     int valueStart, valueEnd;
     private String name;
     private byte type;
+    private String value;
 
     PartialParam(String name, int valueStart, int valueEnd) {
-        this(name, valueStart, valueEnd, IParameter.PARAM_COOKIE);
+        this(name, valueStart, valueEnd, IParameter.PARAM_COOKIE, null);
+    }
+
+    PartialParam(String name, int valueStart, int valueEnd, String fakeValue) {
+        this(name, valueStart, valueEnd, IParameter.PARAM_COOKIE, null);
     }
 
     PartialParam(String name, int valueStart, int valueEnd, byte type) {
+        this(name, valueStart, valueEnd, type, null);
+    }
+
+    PartialParam(String name, int valueStart, int valueEnd, byte type, String fakeValue) {
         this.name = name;
         this.valueStart = valueStart;
         this.valueEnd = valueEnd;
         this.type = type;
+        this.value = fakeValue;
     }
 
 
@@ -31,7 +41,7 @@ class PartialParam implements IParameter {
 
     @Override
     public String getValue() {
-        return null;
+        return value;
     }
 
     @Override

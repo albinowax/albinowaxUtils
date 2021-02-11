@@ -985,7 +985,7 @@ class Utilities {
         return null;
     }
 
-    public static PartialParam paramify(byte[] request, String name, String target) {
+    public static PartialParam paramify(byte[] request, String name, String target, String fakeBaseValue) {
 //        // todo pass in value maybe
 //        if (target.length() != basevalue.length()) {
 //            throw new RuntimeException("target length must equal basevalue length");
@@ -1282,14 +1282,14 @@ class Utilities {
     }
 
     static IScanIssue reportReflectionIssue(Attack[] attacks, IHttpRequestResponse baseRequestResponse) {
-        return reportReflectionIssue(attacks, baseRequestResponse, "");
+        return reportReflectionIssue(attacks, baseRequestResponse, "", "");
     }
 
-    static IScanIssue reportReflectionIssue(Attack[] attacks, IHttpRequestResponse baseRequestResponse, String title) {
+    static IScanIssue reportReflectionIssue(Attack[] attacks, IHttpRequestResponse baseRequestResponse, String title, String detail) {
         IHttpRequestResponse[] requests = new IHttpRequestResponse[attacks.length];
         Probe bestProbe = null;
         boolean reliable = false;
-        String detail = "<br/><br/><b>Successful probes</b><br/>";
+        detail = detail + "<br/><br/><b>Successful probes</b><br/>";
         String reportedSeverity = "High";
         int evidenceCount = 0;
 
@@ -1371,8 +1371,8 @@ class Utilities {
             reportedSeverity = "Information";
         }
 
-        if ("".equals(title)) {
-            title = "Interesting input handling:" +bestProbe.getName();
+        if ("Interesting input handling".equals(title)) {
+            title = bestProbe.getName();
         }
 
         return new Fuzzable(requests, analyzeRequest(baseRequestResponse).getUrl(), title, detail, reliable, reportedSeverity); //attacks[attacks.length-2].getProbe().getName()
@@ -1381,14 +1381,12 @@ class Utilities {
 
 
 class Fuzzable extends CustomScanIssue {
-    private final static String DETAIL =
-            "A unlinked input was identified, based on the following evidence. " +
-                    "Response attributes that only stay consistent in one probe-set are italicised, with the variable attribute starred.";
+
     private final static String REMEDIATION = "This issue does not necessarily indicate a vulnerability; it is merely highlighting behaviour worthy of manual investigation. Try to determine the root cause of the observed behaviour." +
             "Refer to <a href='http://blog.portswigger.net/2016/11/backslash-powered-scanning-hunting.html'>Backslash Powered Scanning</a> for further details and guidance interpreting results. ";
 
     Fuzzable(IHttpRequestResponse[] requests, URL url, String title, String detail, boolean reliable, String severity) {
-        super(requests[0].getHttpService(), url, requests, title, DETAIL + detail, severity, calculateConfidence(reliable), REMEDIATION);
+        super(requests[0].getHttpService(), url, requests, title, detail, severity, calculateConfidence(reliable), REMEDIATION);
     }
 
     private static String calculateConfidence(boolean reliable) {

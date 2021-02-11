@@ -275,23 +275,24 @@ class ScanItem {
 //        }
         prepared = true;
 
+        // todo we kinda need the base-value
         if (Utilities.containsBytes(req.getResponse(), "HTTP/2".getBytes())) {
             if (Utilities.globalSettings.getBoolean("params: scheme")) {
                 byte[] updated = Utilities.addOrReplaceHeader(req.getRequest(), ":scheme", "m838jacxka");
                 Req newReq = new Req(updated, req.getResponse(), req.getHttpService());
-                items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-proto", "m838jacxka")));
+                items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-proto", "m838jacxka", "https")));
             }
 
             if (Utilities.globalSettings.getBoolean("params: scheme-path")) {
                 byte[] updated = Utilities.addOrReplaceHeader(req.getRequest(), ":scheme", "https://" + req.getHttpService().getHost() + "/m838jacxka");
                 Req newReq = new Req(updated, req.getResponse(), req.getHttpService());
-                items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-path", "m838jacxka")));
+                items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-path", "m838jacxka", "m838jacxka")));
             }
 
             if (Utilities.globalSettings.getBoolean("params: scheme-host")) {
                 byte[] updated = Utilities.addOrReplaceHeader(req.getRequest(), ":scheme", "https://m838jacxka/");
                 Req newReq = new Req(updated, req.getResponse(), req.getHttpService());
-                items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-host", "m838jacxka")));
+                items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-host", "m838jacxka", "m838jacxka")));
             }
         }
 
@@ -301,6 +302,7 @@ class ScanItem {
         }
 
         // don't waste time analysing GET requests with no = in the request line
+        // todo check method here once POST params are supported
         if (!Utilities.getPathFromRequest(req.getRequest()).contains("=")) {
             if (!Utilities.globalSettings.getBoolean("params: dummy")) {
                 return items;
