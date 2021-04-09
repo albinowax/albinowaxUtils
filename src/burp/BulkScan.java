@@ -50,6 +50,7 @@ class BulkScanLauncher {
         Utilities.globalSettings.registerSetting("report tentative", true);
         Utilities.globalSettings.registerSetting("timeout", 10);
         Utilities.globalSettings.registerSetting("include origin in cachebusters", true);
+        Utilities.globalSettings.registerSetting("include path in cachebusters", false);
 
 
         Utilities.globalSettings.registerSetting("params: dummy", false);

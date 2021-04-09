@@ -1258,6 +1258,13 @@ class Utilities {
         if (globalSettings.getBoolean("include origin in cachebusters")) {
             req = Utilities.addOrReplaceHeader(req, "Origin", "https://" + cacheBuster + ".com");
         }
+
+        if (globalSettings.getBoolean("include path in cachebusters")) {
+            String path = Utilities.getPathFromRequest(req);
+            path = "/"+cacheBuster+"/.."+path;
+            req = Utilities.setPath(req, path);
+        }
+
         req = Utilities.appendToHeader(req, "Accept", ", text/" + cacheBuster);
         req = Utilities.appendToHeader(req, "Accept-Encoding", ", " + cacheBuster);
         req = Utilities.appendToHeader(req, "User-Agent", " " + cacheBuster);
