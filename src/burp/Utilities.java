@@ -666,7 +666,7 @@ class Utilities {
             suffix = "&";
         }
 
-        return replace(request, " HTTP/1.1".getBytes(), (suffix+" HTTP/1.1").getBytes());
+        return replace(request, " HTTP/".getBytes(), (suffix+" HTTP/").getBytes());
     }
 
 
@@ -713,7 +713,7 @@ class Utilities {
         }
 
         if(j >= i) {
-            request = replace(request, " HTTP/1.1".getBytes(), (suffix+" HTTP/1.1").getBytes());
+            request = replace(request, " HTTP/".getBytes(), (suffix+" HTTP/").getBytes());
         }
         else {
             request = replace(request, "?".getBytes(), (suffix+"?").getBytes()); // fixme replace can't handle single-char inputs
