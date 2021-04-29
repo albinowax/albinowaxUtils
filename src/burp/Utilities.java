@@ -26,13 +26,14 @@ import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
-    public static final String version = "0.21";
+    public static final String version = "0.23";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
     static final boolean DEBUG = false;
     static boolean chopNestedResponses = false;
     static final byte CONFIRMATIONS = 5;
+    static boolean supportsHTTP2 = true;
 
     static final boolean CACHE_ONLY = false;
 
@@ -1290,6 +1291,10 @@ class Utilities {
 
     static IScanIssue reportReflectionIssue(Attack[] attacks, IHttpRequestResponse baseRequestResponse) {
         return reportReflectionIssue(attacks, baseRequestResponse, "", "");
+    }
+
+    static IScanIssue reportReflectionIssue(Attack[] attacks, IHttpRequestResponse baseRequestResponse, String title) {
+        return reportReflectionIssue(attacks, baseRequestResponse, title, "");
     }
 
     static IScanIssue reportReflectionIssue(Attack[] attacks, IHttpRequestResponse baseRequestResponse, String title, String detail) {

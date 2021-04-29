@@ -1,6 +1,7 @@
 package burp;
 
 import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.apache.commons.lang3.NotImplementedException;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -582,14 +583,12 @@ abstract class Scan implements IScannerCheck {
     }
 
     static Resp request(IHttpService service, byte[] req, int maxRetries) {
+        return request(service, req, maxRetries, false);
+    }
+
+    static Resp request(IHttpService service, byte[] req, int maxRetries, boolean forceHTTP1) {
         if (Utilities.unloaded.get()) {
             throw new RuntimeException("Aborting due to extension unload");
-        }
-
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-
         }
 
         IHttpRequestResponse resp = null;
@@ -600,8 +599,20 @@ abstract class Scan implements IScannerCheck {
             while (( resp == null || resp.getResponse() == null) && attempts <= maxRetries) {
                 startTime = System.currentTimeMillis();
                 try {
-                    byte[] responseBytes = Utilities.callbacks.makeHttpRequest(service, req).getResponse();
+                    byte[] responseBytes;
+                    if (Utilities.supportsHTTP2) {
+                        //responseBytes = Utilities.callbacks.makeHttpRequest(service, req).getResponse();
+                        if (forceHTTP1) {
+                            req = Utilities.replaceFirst(req, "HTTP/2\r\n", "HTTP/1.1\r\n");
+                        }
+                        responseBytes = Utilities.callbacks.makeHttpRequest(service, req, forceHTTP1).getResponse();
+                    } else {
+                        responseBytes = Utilities.callbacks.makeHttpRequest(service, req).getResponse();
+                    }
                     resp = new Req(req, responseBytes, service);
+                } catch (NoSuchMethodError e) {
+                    Utilities.supportsHTTP2 = false;
+                    continue;
                 } catch (java.lang.RuntimeException e) {
                     Utilities.out("Recovering from request exception: "+service.getHost());
                     Utilities.err("Recovering from request exception: "+service.getHost());
@@ -611,29 +622,30 @@ abstract class Scan implements IScannerCheck {
             }
         }
         else {
-            byte[] response = loader.getResponse(service.getHost(), req);
-            if (response == null) {
-                try {
-                    String template = Utilities.helpers.bytesToString(req).replace(service.getHost(), "%d");
-                    String name = Integer.toHexString(template.hashCode());
-                    PrintWriter out = new PrintWriter("/Users/james/PycharmProjects/zscanpipeline/generated-requests/"+name);
-                    out.print(template);
-                    out.close();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-
-                Utilities.out("Couldn't find response. Sending via Burp instead");
-                Utilities.out(Utilities.helpers.bytesToString(req));
-                return new Resp(Utilities.callbacks.makeHttpRequest(service, req), startTime);
-                //throw new RuntimeException("Couldn't find response");
-            }
-
-            if (Arrays.equals(response, "".getBytes())) {
-                response = null;
-            }
-
-            resp = new Req(req, response, service);
+            throw new NotImplementedException("hmm");
+//            byte[] response = loader.getResponse(service.getHost(), req);
+//            if (response == null) {
+//                try {
+//                    String template = Utilities.helpers.bytesToString(req).replace(service.getHost(), "%d");
+//                    String name = Integer.toHexString(template.hashCode());
+//                    PrintWriter out = new PrintWriter("/Users/james/PycharmProjects/zscanpipeline/generated-requests/"+name);
+//                    out.print(template);
+//                    out.close();
+//                } catch (FileNotFoundException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                Utilities.out("Couldn't find response. Sending via Burp instead");
+//                Utilities.out(Utilities.helpers.bytesToString(req));
+//                return new Resp(Utilities.callbacks.makeHttpRequest(service, req, forceHTTP1), startTime);
+//                //throw new RuntimeException("Couldn't find response");
+//            }
+//
+//            if (Arrays.equals(response, "".getBytes())) {
+//                response = null;
+//            }
+//
+//            resp = new Req(req, response, service);
         }
 
         return new Resp(resp, startTime);
