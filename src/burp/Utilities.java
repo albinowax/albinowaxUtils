@@ -35,8 +35,6 @@ class Utilities {
     static final byte CONFIRMATIONS = 5;
     static boolean supportsHTTP2 = true;
 
-    static final boolean CACHE_ONLY = false;
-
     static AtomicBoolean unloaded = new AtomicBoolean(false);
 
 
@@ -505,13 +503,13 @@ class Utilities {
     static String getPathFromRequest(byte[] request) {
         int i = 0;
         boolean recording = false;
-        String path = "";
+        StringBuilder path = new StringBuilder("");
         while (i < request.length) {
             byte x = request[i];
 
             if (recording) {
                 if (x != ' ') {
-                    path += (char) x;
+                    path.append(x);
                 } else {
                     break;
                 }
@@ -522,7 +520,19 @@ class Utilities {
             }
             i++;
         }
-        return path;
+        return path.toString();
+    }
+
+    static boolean isHTTP2(byte[] request) {
+        int i = 0;
+
+        while (i < request.length) {
+            if (request[i] == '\r') {
+                break;
+            }
+            i++;
+        }
+        return "HTTP/2".equals(new String(Arrays.copyOfRange(request, i-6,i)));
     }
 
     static String getExtension(byte[] request) {
