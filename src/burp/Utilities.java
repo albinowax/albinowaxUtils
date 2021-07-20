@@ -509,7 +509,7 @@ class Utilities {
 
             if (recording) {
                 if (x != ' ') {
-                    path.append(x);
+                    path.append((char) x);
                 } else {
                     break;
                 }

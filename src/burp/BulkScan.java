@@ -216,13 +216,13 @@ class BulkScan implements Runnable  {
                     }
                     Utilities.log("Adding request on " + host + " to queue");
                     queued++;
-                    taskEngine.execute(new BulkScanItem(scan, req));
+                    taskEngine.execute(new BulkScanItem(scan, req, start));
                 }
 
                 cache = new CircularFifoQueue<>(max(min(remainingHosts.size() - 1, thread_count), 1));
             }
 
-            Utilities.out("Queued " + queued + " attacks from " + totalRequests + " requests in " + (System.currentTimeMillis() - start) / 100 + " seconds");
+            Utilities.out("Queued " + queued + " attacks from " + totalRequests + " requests in " + (System.currentTimeMillis() - start) / 1000 + " seconds");
         } catch (Exception e) {
             Utilities.out("Queue aborted due to exception");
             Utilities.showError(e);
@@ -460,11 +460,13 @@ class BulkScanItem implements Runnable {
     private final ScanItem baseItem;
     private final IHttpRequestResponsePersisted baseReq;
     private final Scan scanner;
+    private final long start;
 
-    BulkScanItem(Scan scanner, ScanItem baseReq) {
+    BulkScanItem(Scan scanner, ScanItem baseReq, long start) {
         this.baseReq = Utilities.callbacks.saveBuffersToTempFiles(baseReq.req);
         this.baseItem = baseReq;
         this.scanner = scanner;
+        this.start = start;
     }
 
     public void run() {
@@ -476,7 +478,7 @@ class BulkScanItem implements Runnable {
             }
             ScanPool engine = BulkScanLauncher.getTaskEngine();
             long done = engine.getCompletedTaskCount() + 1;
-            Utilities.out("Completed " + done + " of " + (engine.getQueue().size() + done) + " with " + Utilities.requestCount.get() + " requests, " + engine.candidates + " candidates and " + engine.findings + " findings ");
+            Utilities.out("Completed " + done + " of " + (engine.getQueue().size() + done) + " in " + (System.currentTimeMillis() - start) / 1000 + " seconds with " + Utilities.requestCount.get() + " requests, " + engine.candidates + " candidates and " + engine.findings + " findings ");
         } catch (Exception e) {
             Utilities.showError(e);
         }
@@ -600,11 +602,12 @@ abstract class Scan implements IScannerCheck {
                 startTime = System.currentTimeMillis();
                 try {
                     byte[] responseBytes;
+                    if (forceHTTP1 || !Utilities.supportsHTTP2) {
+                        req = Utilities.replaceFirst(req, "HTTP/2\r\n", "HTTP/1.1\r\n");
+                    }
+
                     if (Utilities.supportsHTTP2) {
                         //responseBytes = Utilities.callbacks.makeHttpRequest(service, req).getResponse();
-                        if (forceHTTP1) {
-                            req = Utilities.replaceFirst(req, "HTTP/2\r\n", "HTTP/1.1\r\n");
-                        }
                         responseBytes = Utilities.callbacks.makeHttpRequest(service, req, forceHTTP1).getResponse();
                     } else {
                         responseBytes = Utilities.callbacks.makeHttpRequest(service, req).getResponse();
