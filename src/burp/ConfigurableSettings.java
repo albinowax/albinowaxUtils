@@ -6,6 +6,7 @@ import javax.swing.event.MenuListener;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.awt.event.ActionEvent;
@@ -60,6 +61,11 @@ class ConfigMenu implements Runnable, MenuListener, IExtensionStateListener{
 
 interface ConfigListener {
     void valueUpdated(String value);
+}
+
+class Setting {
+    String value = "";
+
 }
 
 class ConfigurableSettings {
@@ -201,14 +207,18 @@ class ConfigurableSettings {
     }
 
     ConfigurableSettings showSettings() {
+        return showSettings(new ArrayList<>(settings.keySet()));
+    }
+
+    ConfigurableSettings showSettings(ArrayList<String> settingsToShow) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(0, 6));
         panel.setSize(800, 800);
 
         HashMap<String, Object> configured = new HashMap<>();
-        JButton buttonResetSettings = new JButton("Reset Settings");
+        JButton buttonResetSettings = new JButton("Reset Visible Settings");
 
-        for(String key: settings.keySet()) {
+        for(String key: settingsToShow) {
             String type = getType(key);
             JLabel label = new JLabel("\n"+key+": ");
             if (!settings.get(key).equals(defaultSettings.get(key))) {
@@ -243,7 +253,7 @@ class ConfigurableSettings {
         buttonResetSettings.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 Utilities.out("Discarding settings...");
-                for(String key: settings.keySet()) {
+                for(String key: settingsToShow) {
                     Utilities.callbacks.saveExtensionSetting(key, null); // purge saved settings
                 }
                 setDefaultSettings();

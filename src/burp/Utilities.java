@@ -26,7 +26,7 @@ import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
-    public static final String version = "0.23";
+    public static final String version = "0.3";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -944,6 +944,10 @@ class Utilities {
     }
 
     public static byte[] setHeader(byte[] request, String header, String value) {
+        return setHeader(request, header, value, false);
+    }
+
+    public static byte[] setHeader(byte[] request, String header, String value, boolean tolerateMissing) {
         int[] offsets = getHeaderOffsets(request, header);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
@@ -954,8 +958,12 @@ class Utilities {
         } catch (IOException e) {
             throw new RuntimeException("Req creation unexpectedly failed");
         } catch (NullPointerException e) {
-            Utilities.out("header locating fail: "+header);
-            Utilities.out("'"+helpers.bytesToString(request)+"'");
+            if (tolerateMissing) {
+                return request;
+            }
+
+            Utilities.out("header locating fail: " + header);
+            Utilities.out("'" + helpers.bytesToString(request) + "'");
             throw new RuntimeException("Can't find the header: "+header);
         }
     }
@@ -1073,7 +1081,7 @@ class Utilities {
         if (countMatches(request, helpers.stringToBytes("Content-Length: ")) > 0) {
             int start = Utilities.getBodyStart(request);
             int contentLength = request.length - start;
-            return setHeader(request, "Content-Length", Integer.toString(contentLength));
+            return setHeader(request, "Content-Length", Integer.toString(contentLength), true);
         }
         else {
             return request;
@@ -1196,9 +1204,9 @@ class Utilities {
         int maxAttempts = 3;
 
         boolean expectNestedResponse = false;
-        if (chopNestedResponses && Utilities.containsBytes(Utilities.getBodyBytes(req), "HTTP/1".getBytes())) {
+        if (chopNestedResponses && "1".equals(Utilities.getHeader(req, "X-Mine-Nested-Request")) /*Utilities.containsBytes(Utilities.getBodyBytes(req), " HTTP/1.1\r\n".getBytes())*/) {
             expectNestedResponse = true;
-            maxAttempts = 20;
+            maxAttempts = Utilities.globalSettings.getInt("tunnelling retry count");
         }
 
         for(int attempt=1; attempt<maxAttempts; attempt++) {
@@ -1248,7 +1256,16 @@ class Utilities {
         }
 
         if (result == null || result.getResponse() == null) {
-            Utilities.log("Req failed multiple times, giving up");
+            if (expectNestedResponse) {
+                if (Utilities.globalSettings.getBoolean("abort on tunnel failure")) {
+                    throw new RuntimeException("Failed to get a nested response after " + maxAttempts + " retries. Bailing!");
+                } else {
+                    Utilities.out("Failed to get a nested response after " + maxAttempts + " retries. Continuing with null response.");
+                }
+            }
+            else {
+                Utilities.log("Req failed multiple times, giving up");
+            }
         }
 
         return result;

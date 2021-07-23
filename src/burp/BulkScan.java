@@ -7,11 +7,8 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URL;
-import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -22,6 +19,27 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+class SettingsBox {
+    private LinkedHashSet<String> settings;
+
+    public SettingsBox() {
+         settings = new LinkedHashSet<>();
+    }
+
+    public void register(String name, Object value) {
+        settings.add(name);
+        Utilities.globalSettings.registerSetting(name, value);
+    }
+
+    public void importSettings(SettingsBox newSettings) {
+        settings.addAll(newSettings.getSettings());
+    }
+
+    public ArrayList<String> getSettings() {
+        return new ArrayList<>(settings);
+    }
+}
 
 class BulkScanLauncher {
 
@@ -37,33 +55,6 @@ class BulkScanLauncher {
         tasks = new LinkedBlockingQueue<>();
 
         Utilities.globalSettings.registerSetting("thread pool size", 8);
-        Utilities.globalSettings.registerSetting("use key", true);
-        Utilities.globalSettings.registerSetting("key method", true);
-        Utilities.globalSettings.registerSetting("key status", true);
-        Utilities.globalSettings.registerSetting("key content-type", true);
-        Utilities.globalSettings.registerSetting("key server", true);
-        Utilities.globalSettings.registerSetting("key header names", false);
-
-        Utilities.globalSettings.registerSetting("filter", "");
-        Utilities.globalSettings.registerSetting("mimetype-filter", "");
-        Utilities.globalSettings.registerSetting("resp-filter", "");
-        Utilities.globalSettings.registerSetting("confirmations", 5);
-        Utilities.globalSettings.registerSetting("report tentative", true);
-        Utilities.globalSettings.registerSetting("timeout", 10);
-        Utilities.globalSettings.registerSetting("include origin in cachebusters", true);
-        Utilities.globalSettings.registerSetting("include path in cachebusters", false);
-
-
-        Utilities.globalSettings.registerSetting("params: dummy", false);
-        //Utilities.globalSettings.registerSetting("params: cookies", false);
-        //Utilities.globalSettings.registerSetting("special params", false);
-        Utilities.globalSettings.registerSetting("dummy param name", "utm_campaign");
-        Utilities.globalSettings.registerSetting("params: query", true);
-        Utilities.globalSettings.registerSetting("params: scheme", false);
-        Utilities.globalSettings.registerSetting("params: scheme-host", false);
-        Utilities.globalSettings.registerSetting("params: scheme-path", false);
-
-
         ScanPool taskEngine = new ScanPool(Utilities.globalSettings.getInt("thread pool size"), Utilities.globalSettings.getInt("thread pool size"), 10, TimeUnit.MINUTES, tasks);
         Utilities.globalSettings.registerListener("thread pool size", value -> {
             Utilities.out("Updating active thread pool size to "+value);
@@ -414,7 +405,7 @@ class TriggerBulkScan implements ActionListener {
             }
         }
 
-        ConfigurableSettings config = Utilities.globalSettings.showSettings();
+        ConfigurableSettings config = Utilities.globalSettings.showSettings(scan.scanSettings.getSettings());
         if (config != null) {
             BulkScan bulkScan = new BulkScan(scan, reqs, config);
             (new Thread(bulkScan)).start();
@@ -489,6 +480,15 @@ class BulkScanItem implements Runnable {
 abstract class ParamScan extends Scan {
     public ParamScan(String name) {
         super(name);
+        // param-scan settings
+        scanSettings.register("params: dummy", false);
+        //genericSettings.register("params: cookies", false);
+        //genericSettings.register("special params", false);
+        scanSettings.register("dummy param name", "utm_campaign");
+        scanSettings.register("params: query", true);
+        scanSettings.register("params: scheme", false);
+        scanSettings.register("params: scheme-host", false);
+        scanSettings.register("params: scheme-path", false);
     }
 
     abstract List<IScanIssue> doScan(IHttpRequestResponse baseRequestResponse, IScannerInsertionPoint insertionPoint);
@@ -503,11 +503,41 @@ abstract class ParamScan extends Scan {
 abstract class Scan implements IScannerCheck {
     static ZgrabLoader loader = null;
     String name = "";
+    SettingsBox scanSettings;
 
     Scan(String name) {
         this.name = name;
         BulkScan.scans.add(this);
+        scanSettings = new SettingsBox();
+
+        // any-scan settings
+        scanSettings.register("thread pool size", 8);
+        scanSettings.register("use key", true);
+        scanSettings.register("key method", true);
+        scanSettings.register("key status", true);
+        scanSettings.register("key content-type", true);
+        scanSettings.register("key server", true);
+        scanSettings.register("key header names", false);
+        scanSettings.register("filter", "");
+        scanSettings.register("mimetype-filter", "");
+        scanSettings.register("resp-filter", "");
+        scanSettings.register("timeout", 10);
+
+        // specific-scan settings TODO remove
+        scanSettings.register("confirmations", 5);
+        scanSettings.register("report tentative", true);
+        scanSettings.register("include origin in cachebusters", true);
+        scanSettings.register("include path in cachebusters", false);
+
         //Utilities.callbacks.registerScannerCheck(this);
+    }
+
+    List<String> getSettings() {
+//        Set<String> settings = new HashSet<>();
+//        settings.addAll(scanSettings.getSettings());
+//        settings.addAll(BulkScanLauncher.genericSettings.getSettings());
+//        return new ArrayList<>(settings);
+        return scanSettings.getSettings();
     }
 
     List<IScanIssue> doScan(byte[] baseReq, IHttpService service) {
