@@ -32,6 +32,10 @@ class SettingsBox {
         Utilities.globalSettings.registerSetting(name, value);
     }
 
+    public boolean contains(String key) {
+        return settings.contains(key);
+    }
+
     public void importSettings(SettingsBox newSettings) {
         settings.addAll(newSettings.getSettings());
     }
