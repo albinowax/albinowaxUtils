@@ -1237,14 +1237,11 @@ class Utilities {
             }
 
             if (expectNestedResponse) {
-                byte[] body = getBodyBytes(result.getResponse());
-                if (!containsBytes(body, "HTTP/".getBytes())) {
-                    //Utilities.out("Missing nested response, retrying...");
-                    result.setResponse(null);
+                byte[] nestedResponse = getNestedResponse(result.getResponse());
+                result.setResponse(nestedResponse);
+                if (nestedResponse == null) {
                     continue;
                 }
-                int nestedRespStart = helpers.indexOf(body, "HTTP/".getBytes(), false, 0, body.length);
-                result.setResponse(Arrays.copyOfRange(body, nestedRespStart, body.length));
             }
 
             if (LOG_PERFORMANCE) {
@@ -1270,6 +1267,15 @@ class Utilities {
         }
 
         return result;
+    }
+
+    static byte[] getNestedResponse(byte[] response) {
+        byte[] body = getBodyBytes(response);
+        if (!containsBytes(body, "HTTP/".getBytes())) {
+            return null;
+        }
+        int nestedRespStart = helpers.indexOf(body, "HTTP/".getBytes(), false, 0, body.length);
+        return Arrays.copyOfRange(body, nestedRespStart, body.length);
     }
 
     static String encodeParam(String payload) {
