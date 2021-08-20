@@ -26,7 +26,7 @@ import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
-    public static final String version = "0.4";
+    public static final String version = "0.5";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -501,6 +501,7 @@ class Utilities {
 //        callbacks.applyMarkers()
 //    }
     // records from the first space to the second space
+    // also gets code from response!
     static String getPathFromRequest(byte[] request) {
         int i = 0;
         boolean recording = false;
@@ -533,6 +534,11 @@ class Utilities {
             }
             i++;
         }
+
+        if (i < 6) {
+            return false;
+        }
+
         return "HTTP/2".equals(new String(Arrays.copyOfRange(request, i-6,i)));
     }
 
@@ -737,6 +743,10 @@ class Utilities {
     static List<int[]> getMatches(byte[] response, byte[] match, int giveUpAfter) {
         if (giveUpAfter == -1) {
             giveUpAfter = response.length;
+        }
+
+        if (match.length == 0) {
+            throw new RuntimeException("Utilities.getMatches() on the empty string is not allowed)");
         }
 
         List<int[]> matches = new ArrayList<>();
@@ -1237,7 +1247,7 @@ class Utilities {
             }
 
             if (expectNestedResponse) {
-                byte[] nestedResponse = getNestedResponse(result.getResponse());
+                byte[] nestedResponse = Utilities.getNestedResponse(result.getResponse());
                 result.setResponse(nestedResponse);
                 if (nestedResponse == null) {
                     continue;
