@@ -6,9 +6,9 @@ repositories {
 
 dependencies {
     //compile 'net.portswigger.burp.extender:burp-extender-api:1.7.13'
-    compile files('burp-extender-api-2021.5.jar')
-    compile 'org.apache.commons:commons-lang3:3.5'
-    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
+    implementation files('burp-extender-api-2021.5.jar')
+    implementation 'org.apache.commons:commons-lang3:3.5'
+    implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
 //    compile files('turbo-intruder-all.jar')
 }
 
@@ -24,9 +24,9 @@ sourceSets {
 }
 
 task fatJar(type: Jar) {
-
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
 

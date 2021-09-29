@@ -2,6 +2,7 @@ package burp;
 
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -78,6 +79,19 @@ class BulkScanLauncher {
     }
 }
 
+class SortByParentDomain implements  Comparator<ScanItem> {
+    @Override
+    public int compare(ScanItem o1, ScanItem o2) {
+        int dot1 = StringUtils.countMatches(o1.host, ".");
+        int dot2 = StringUtils.countMatches(o2.host, ".");
+        int score = dot1 - dot2;
+        if (score == 0) {
+            score = o1.host.length() - o2.host.length();
+        }
+        return score;
+    }
+}
+
 class BulkScan implements Runnable  {
     private IHttpRequestResponse[] reqs;
     private Scan scan;
@@ -104,10 +118,13 @@ class BulkScan implements Runnable  {
             //ArrayList<IHttpRequestResponse> reqlist = new ArrayList<>(Arrays.asList(reqs));
 
             ArrayList<ScanItem> reqlist = new ArrayList<>();
+
             for (IHttpRequestResponse req : reqs) {
                 reqlist.add(new ScanItem(req, config, scan));
             }
+
             Collections.shuffle(reqlist);
+            Collections.sort(reqlist, new SortByParentDomain());
 
             int cache_size = queueSize; //thread_count;
 
@@ -127,6 +144,7 @@ class BulkScan implements Runnable  {
             boolean applyFilter = !"".equals(filter);
             String mimeFilter = Utilities.globalSettings.getString("mimetype-filter");
             boolean applyMimeFilter = !"".equals(mimeFilter);
+            boolean applySchemeFilter = config.getBoolean("filter HTTP");
 
             // every pass adds at least one item from every host
             while (!reqlist.isEmpty()) {
@@ -136,6 +154,10 @@ class BulkScan implements Runnable  {
                     remove = true;
                     ScanItem req = left.next();
 
+                    if (applySchemeFilter && "http".equals(req.req.getHttpService().getProtocol())) {
+                        left.remove();
+                        continue;
+                    }
 
                     if (applyFilter && !Utilities.containsBytes(req.req.getRequest(), filter.getBytes())) {
                         left.remove();
@@ -340,7 +362,10 @@ class ScanItem {
         }
 
         StringBuilder key = new StringBuilder();
-        key.append(req.getHttpService().getProtocol());
+        if (!config.getBoolean("filter HTTP")) {
+            key.append(req.getHttpService().getProtocol());
+        }
+
         key.append(req.getHttpService().getHost());
 
         if (scan instanceof ParamScan) {
@@ -473,7 +498,7 @@ class BulkScanItem implements Runnable {
             }
             ScanPool engine = BulkScanLauncher.getTaskEngine();
             long done = engine.getCompletedTaskCount() + 1;
-            Utilities.out("Completed " + done + " of " + (engine.getQueue().size() + done) + " in " + (System.currentTimeMillis() - start) / 1000 + " seconds with " + Utilities.requestCount.get() + " requests, " + engine.candidates + " candidates and " + engine.findings + " findings ");
+            Utilities.out("Completed "+baseItem.host + ": " + done + " of " + (engine.getQueue().size() + done) + " in " + (System.currentTimeMillis() - start) / 1000 + " seconds with " + Utilities.requestCount.get() + " requests, " + engine.candidates + " candidates and " + engine.findings + " findings ");
         } catch (Exception e) {
             Utilities.showError(e);
         }
@@ -525,6 +550,7 @@ abstract class Scan implements IScannerCheck {
         scanSettings.register("filter", "");
         scanSettings.register("mimetype-filter", "");
         scanSettings.register("resp-filter", "");
+        scanSettings.register("filter HTTP", false);
         scanSettings.register("timeout", 10);
 
         // specific-scan settings TODO remove
@@ -730,6 +756,7 @@ class Resp {
     private short status = 0;
     private boolean timedOut = false;
     private boolean failed = false;
+    private boolean early = false;
 
     Resp(IHttpRequestResponse req) {
         this(req, System.currentTimeMillis());
@@ -738,27 +765,26 @@ class Resp {
     Resp(IHttpRequestResponse req, long startTime) {
         this.req = req;
 
+        byte[] fail = Utilities.helpers.stringToBytes("null");
+        byte[] earlyResponse = Utilities.helpers.stringToBytes("early-response");
         // fixme will interact badly with distribute-damage
         int burpTimeout = Integer.parseInt(Utilities.getSetting("project_options.connections.timeouts.normal_timeout"));
         int scanTimeout = Utilities.globalSettings.getInt("timeout") * 1000;
 
+        early = Arrays.equals(req.getResponse(), earlyResponse);
+        failed = req.getResponse() == null || req.getResponse().length == 0 || Arrays.equals(req.getResponse(), fail) || early;
+
         responseTime = System.currentTimeMillis() - startTime;
         if (burpTimeout == scanTimeout) {
-            if (req.getResponse() == null || req.getResponse().length == 0) {
-                this.failed = true;
-                if (responseTime > scanTimeout) {
-                    this.timedOut = true;
-                }
+            if (failed && responseTime > scanTimeout) {
+                this.timedOut = true;
             }
         } else {
             if (responseTime > scanTimeout) {
-                if (req.getResponse() != null && req.getResponse().length != 0) {
+                this.timedOut = true;
+                if (failed) {
                     Utilities.out("TImeout with response. Start time: " + startTime + " Current time: " + System.currentTimeMillis() + " Difference: " + (System.currentTimeMillis() - startTime) + " Tolerance: " + scanTimeout);
                 }
-                this.timedOut = true;
-                this.failed = true;
-            } else if (req.getResponse() == null || req.getResponse().length == 0) {
-                this.failed = true;
             }
         }
         if (!this.failed) {
@@ -780,6 +806,8 @@ class Resp {
     IResponseVariations getAttributes() {
         return attributes;
     }
+
+    boolean early() { return early;}
 
     boolean failed() {
         return failed;

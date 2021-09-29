@@ -102,11 +102,13 @@ class Utilities {
         helpers = callbacks.getHelpers();
 
         Utilities.out("Using albinowaxUtils v"+version);
-        globalSettings = new ConfigurableSettings(settings);
-        if (DEBUG) {
-            globalSettings.printSettings();
-        }
 
+        if (settings != null) {
+            globalSettings = new ConfigurableSettings(settings);
+            if (DEBUG) {
+                globalSettings.printSettings();
+            }
+        }
     }
 
     static boolean isBurpPro() {
@@ -1284,7 +1286,7 @@ class Utilities {
         if (!containsBytes(body, "HTTP/".getBytes())) {
             return null;
         }
-        int nestedRespStart = helpers.indexOf(body, "HTTP/".getBytes(), false, 0, body.length);
+        int nestedRespStart = helpers.indexOf(body, "HTTP/".getBytes(), true, 0, body.length);
         return Arrays.copyOfRange(body, nestedRespStart, body.length);
     }
 
