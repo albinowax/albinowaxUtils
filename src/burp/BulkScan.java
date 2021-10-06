@@ -97,6 +97,7 @@ class BulkScan implements Runnable  {
     private Scan scan;
     private ConfigurableSettings config;
     public static List<Scan> scans = new ArrayList<>();
+    static ConcurrentHashMap<String, Boolean> hostsToSkip = new ConcurrentHashMap<>();
 
     BulkScan(Scan scan, IHttpRequestResponse[] reqs, ConfigurableSettings config) {
         this.scan = scan;
@@ -491,10 +492,14 @@ class BulkScanItem implements Runnable {
 
     public void run() {
         try {
-            if (scanner instanceof ParamScan) {
-                scanner.doActiveScan(baseReq, baseItem.insertionPoint);
+            if (scanner.shouldScan(baseReq)) {
+                if (scanner instanceof ParamScan) {
+                    scanner.doActiveScan(baseReq, baseItem.insertionPoint);
+                } else {
+                    scanner.doScan(baseReq);
+                }
             } else {
-                scanner.doScan(baseReq);
+                Utilities.out("Skipping already-confirmed-vulnerable host: "+baseItem.host);
             }
             ScanPool engine = BulkScanLauncher.getTaskEngine();
             long done = engine.getCompletedTaskCount() + 1;
@@ -576,6 +581,13 @@ abstract class Scan implements IScannerCheck {
 
     List<IScanIssue> doScan(IHttpRequestResponse baseRequestResponse) {
         return doScan(baseRequestResponse.getRequest(), baseRequestResponse.getHttpService());
+    }
+
+    boolean shouldScan(IHttpRequestResponse baseRequestResponse) {
+        if (Utilities.globalSettings.getBoolean("skip vulnerable hosts") && BulkScan.hostsToSkip.containsKey(baseRequestResponse.getHttpService().getHost())) {
+            return false;
+        }
+        return true;
     }
 
     @Override
