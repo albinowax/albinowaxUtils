@@ -614,15 +614,27 @@ abstract class Scan implements IScannerCheck {
     }
 
     static void report(String title, String detail, Resp... requests) {
+        report(title, detail, null, requests);
+    }
+
+
+    static void report(String title, String detail, byte[] baseBytes, Resp... requests) {
         IHttpRequestResponse base = requests[0].getReq();
         IHttpService service = base.getHttpService();
 
-        IHttpRequestResponse[] reqs = new IHttpRequestResponse[requests.length];
-        for (int i=0; i<requests.length; i++) {
-            reqs[i] = requests[i].getReq();
+        ArrayList<IHttpRequestResponse> reqsToReport = new ArrayList<>();
+
+        if (baseBytes != null) {
+            Resp baseReq = new Resp(new Req(baseBytes, null, service));
+            reqsToReport.add(baseReq.getReq());
         }
+
+        for (Resp request : requests) {
+            reqsToReport.add(request.getReq());
+        }
+
         if (Utilities.isBurpPro()) {
-            Utilities.callbacks.addScanIssue(new CustomScanIssue(service, Utilities.getURL(base.getRequest(), service), reqs, title, detail, "High", "Tentative", "."));
+            Utilities.callbacks.addScanIssue(new CustomScanIssue(service, Utilities.getURL(base.getRequest(), service), reqsToReport.toArray(new IHttpRequestResponse[0]), title, detail, "High", "Tentative", "."));
         } else {
             StringBuilder serialisedIssue = new StringBuilder();
             serialisedIssue.append("Found issue: ");
@@ -636,7 +648,7 @@ abstract class Scan implements IScannerCheck {
             serialisedIssue.append(detail);
             serialisedIssue.append("\n");
             serialisedIssue.append("Evidence: \n======================================\n");
-            for (IHttpRequestResponse req: reqs) {
+            for (IHttpRequestResponse req: reqsToReport) {
                 serialisedIssue.append(Utilities.helpers.bytesToString(req.getRequest()));
 //                serialisedIssue.append("\n--------------------------------------\n");
 //                if (req.getResponse() == null) {
