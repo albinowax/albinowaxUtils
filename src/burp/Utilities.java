@@ -822,14 +822,10 @@ class Utilities {
             }
 
             if (newlines_seen == 2) {
+                i += 1;
                 break;
             }
             i += 1;
-        }
-
-
-        while (i < response.length && (response[i] == ' ' || response[i] == '\n' || response[i] == '\r')) {
-            i++;
         }
 
         return i;
