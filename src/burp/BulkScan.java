@@ -557,6 +557,8 @@ abstract class Scan implements IScannerCheck {
         scanSettings.register("resp-filter", "");
         scanSettings.register("filter HTTP", false);
         scanSettings.register("timeout", 10);
+        scanSettings.register("skip vulnerable hosts", false);
+        scanSettings.register("flag new domains", false);
 
         // specific-scan settings TODO remove
         scanSettings.register("confirmations", 5);
@@ -623,6 +625,12 @@ abstract class Scan implements IScannerCheck {
         IHttpService service = base.getHttpService();
 
         ArrayList<IHttpRequestResponse> reqsToReport = new ArrayList<>();
+
+        if (Utilities.globalSettings.getBoolean("flag new domains")) {
+            if (Utilities.callbacks.getScanIssues(service.getProtocol()+"://"+service.getHost()).length == 0) {
+                title = "NEW| "+title;
+            }
+        }
 
         if (baseBytes != null) {
             Resp baseReq = new Resp(new Req(baseBytes, null, service));
