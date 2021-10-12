@@ -121,6 +121,10 @@ class BulkScan implements Runnable  {
             ArrayList<ScanItem> reqlist = new ArrayList<>();
 
             for (IHttpRequestResponse req : reqs) {
+                if (req.getRequest() == null) {
+                    Utilities.out("Skipping null request - not sure how that got there");
+                    continue;
+                }
                 reqlist.add(new ScanItem(req, config, scan));
             }
 
@@ -376,6 +380,10 @@ class ScanItem {
 
         if(config.getBoolean("key method")) {
             key.append(method);
+        }
+
+        if (req.getResponse() == null && config.getBoolean("key content-type")) {
+            key.append(Utilities.getExtension(req.getRequest()));
         }
 
         if (req.getResponse() != null && (config.getBoolean("key header names") || config.getBoolean("key status") || config.getBoolean("key content-type") || config.getBoolean("key server"))) {
