@@ -22,21 +22,25 @@ class ConfigMenu implements Runnable, MenuListener, IExtensionStateListener{
 
     public void run()
     {
-        menuButton = new JMenu(Utilities.name);
-        menuItem = new JMenuItem(new AbstractAction("Settings") {
-            public void actionPerformed(ActionEvent ae) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run(){
-                        Utilities.globalSettings.showSettings();
-                    }
-                });
-            }
-        });
+        try {
+            menuButton = new JMenu(Utilities.name);
+            menuItem = new JMenuItem(new AbstractAction("Settings") {
+                public void actionPerformed(ActionEvent ae) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            Utilities.globalSettings.showSettings();
+                        }
+                    });
+                }
+            });
 
-        menuButton.add(menuItem);
-        JMenuBar burpMenuBar = Utilities.getBurpFrame().getJMenuBar();
-        burpMenuBar.add(menuButton);
-        burpMenuBar.repaint();
+            menuButton.add(menuItem);
+            JMenuBar burpMenuBar = Utilities.getBurpFrame().getJMenuBar();
+            burpMenuBar.add(menuButton);
+            burpMenuBar.repaint();
+        } catch (NullPointerException e){
+            Utilities.log("Couldn't find Burp menu bar - probably running headless/enterprise");
+        }
     }
 
     public void menuSelected(MenuEvent e) {

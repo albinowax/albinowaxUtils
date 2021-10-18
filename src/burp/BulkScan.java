@@ -105,6 +105,20 @@ class BulkScan implements Runnable  {
         this.config = config;
     }
 
+    // this uses hostsToSkip as a cache to avoid hitting the sitemap so much
+    static boolean domainAlreadyFlagged(IHttpService service) {
+        if (BulkScan.hostsToSkip.containsKey(service.getHost())) {
+            return true;
+        }
+
+        if (Utilities.callbacks.getScanIssues(service.getProtocol()+"://"+service.getHost()).length > 0) {
+            BulkScan.hostsToSkip.put(service.getHost(), true);
+            return true;
+        }
+
+        return false;
+    }
+
     public void run() {
         try {
             long start = System.currentTimeMillis();
@@ -163,6 +177,10 @@ class BulkScan implements Runnable  {
                         left.remove();
                         continue;
                     }
+
+//                    if (Utilities.globalSettings.getBoolean("skip flagged hosts") && domainAlreadyFlagged(req.req.getHttpService())) {
+//                        continue;
+//                    }
 
                     if (applyFilter && !Utilities.containsBytes(req.req.getRequest(), filter.getBytes())) {
                         left.remove();
@@ -566,7 +584,9 @@ abstract class Scan implements IScannerCheck {
         scanSettings.register("filter HTTP", false);
         scanSettings.register("timeout", 10);
         scanSettings.register("skip vulnerable hosts", false);
+        scanSettings.register("skip flagged hosts", false);
         scanSettings.register("flag new domains", false);
+
 
         // specific-scan settings TODO remove
         scanSettings.register("confirmations", 5);
@@ -634,8 +654,12 @@ abstract class Scan implements IScannerCheck {
 
         ArrayList<IHttpRequestResponse> reqsToReport = new ArrayList<>();
 
+        if (Utilities.globalSettings.getBoolean("skip flagged hosts") && BulkScan.domainAlreadyFlagged(service)) {
+            return;
+        }
+
         if (Utilities.globalSettings.getBoolean("flag new domains")) {
-            if (Utilities.callbacks.getScanIssues(service.getProtocol()+"://"+service.getHost()).length == 0) {
+            if (!BulkScan.domainAlreadyFlagged(service)) {
                 title = "NEW| "+title;
             }
         }
