@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
@@ -1200,7 +1201,18 @@ class Utilities {
         }
     }
 
+    static byte[] convertToHttp1(byte[] req) {
+        // ISO-8859-1 has a 1-to-1 encoding between strings and bytes
+        String tmp = new String(req, StandardCharsets.ISO_8859_1);
+        tmp = tmp.replaceFirst("HTTP/2", "HTTP/1.1");
+        return tmp.getBytes(StandardCharsets.ISO_8859_1);
+    }
+
     static IHttpRequestResponse attemptRequest(IHttpService service, byte[] req) {
+        return attemptRequest(service, req, false);
+    }
+
+    static IHttpRequestResponse attemptRequest(IHttpService service, byte[] req, boolean forceHttp1) {
         if(unloaded.get()) {
             Utilities.out("Extension unloaded - aborting attack");
             throw new RuntimeException("Extension unloaded");
@@ -1229,7 +1241,7 @@ class Utilities {
                     result = fetchWithGo(service, req);
                 }
                 else {
-                    result = callbacks.makeHttpRequest(service, req);
+                    result = callbacks.makeHttpRequest(service, req, forceHttp1);
                 }
 
             } catch(RuntimeException e) {
