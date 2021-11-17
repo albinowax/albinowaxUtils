@@ -159,7 +159,9 @@ class PayloadInjector {
             request = Utilities.addCacheBuster(request, Utilities.generateCanary());
         }
 
+        boolean forceHttp1 = false;
         if (mutation != null) {
+            forceHttp1 = true;
             HeaderMutator mutator = new HeaderMutator();
             try {
                 byte[] newRequest = mutator.mutateRequest(request, mutation, payload.split("\\|"));
@@ -169,7 +171,7 @@ class PayloadInjector {
             }
         }
 
-        IHttpRequestResponse requestResponse = burp.Utilities.attemptRequest(service, request);
+        IHttpRequestResponse requestResponse = burp.Utilities.attemptRequest(service, request, forceHttp1);
         //Utilities.out("Payload: "+payload+"|"+baseRequestResponse.getHttpService().getHost());
 
         return requestResponse;// Utilities.buildRequest(baseRequestResponse, insertionPoint, payload)
@@ -187,7 +189,9 @@ class PayloadInjector {
         //request = burp.Utilities.appendToQuery(request, Utilities.generateCanary()+"=1");
         request = Utilities.addCacheBuster(request, Utilities.generateCanary());
 
+        boolean forceHttp1 = false;
         if (mutation != null) {
+            forceHttp1 = true;
             HeaderMutator mutator = new HeaderMutator();
             try {
                 byte[] newRequest = mutator.mutateRequest(request, mutation, payload.split("\\|"));
@@ -197,7 +201,7 @@ class PayloadInjector {
             }
         }
 
-        IHttpRequestResponse requestResponse = burp.Utilities.attemptRequest(service, request);
+        IHttpRequestResponse requestResponse = burp.Utilities.attemptRequest(service, request, forceHttp1);
         return new Attack(requestResponse, null, null, "");
     }
 
