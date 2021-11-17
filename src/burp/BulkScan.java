@@ -82,12 +82,9 @@ class BulkScanLauncher {
 class SortByParentDomain implements  Comparator<ScanItem> {
     @Override
     public int compare(ScanItem o1, ScanItem o2) {
-        // on a given domain, prioritise requests with non-root paths
+        // on a given domain, prioritise requests with longer paths
         if (o1.host.equals(o2.host)) {
-            if ("/".equals(Utilities.getPathFromRequest(o1.req.getRequest())) && !"/".equals(Utilities.getPathFromRequest(o2.req.getRequest()))) {
-                return -1;
-            }
-            return 0;
+            return Utilities.getPathFromRequest(o2.req.getRequest()).length() - Utilities.getPathFromRequest(o1.req.getRequest()).length();
         }
 
         // prioritise domains with less dots
