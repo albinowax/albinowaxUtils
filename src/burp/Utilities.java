@@ -103,6 +103,7 @@ class Utilities {
         helpers = callbacks.getHelpers();
 
         Utilities.out("Using albinowaxUtils v"+version);
+        Utilities.out("This extension should be run on the latest version of Burp Suite. Using an older version of Burp may cause impaired functionality.");
 
         if (settings != null) {
             globalSettings = new ConfigurableSettings(settings);

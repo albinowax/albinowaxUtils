@@ -125,16 +125,19 @@ class BulkScan implements Runnable  {
 
     // this uses hostsToSkip as a cache to avoid hitting the sitemap so much
     static boolean domainAlreadyFlagged(IHttpService service) {
-        if (BulkScan.hostsToSkip.containsKey(service.getHost())) {
+        if (domainAlreadyFlaggedInThisScan(service)) {
             return true;
         }
-
         if (Utilities.callbacks.getScanIssues(service.getProtocol()+"://"+service.getHost()).length > 0) {
             BulkScan.hostsToSkip.put(service.getHost(), true);
             return true;
         }
 
         return false;
+    }
+
+    static boolean domainAlreadyFlaggedInThisScan(IHttpService service) {
+        return BulkScan.hostsToSkip.containsKey(service.getHost());
     }
 
     public void run() {
@@ -731,6 +734,10 @@ abstract class Scan implements IScannerCheck {
     }
 
     static Resp request(IHttpService service, byte[] req, int maxRetries, boolean forceHTTP1) {
+        return request(service, req, maxRetries, forceHTTP1, null);
+    }
+
+    static Resp request(IHttpService service, byte[] req, int maxRetries, boolean forceHTTP1, HashMap<String, Boolean> config) {
         if (Utilities.unloaded.get()) {
             throw new RuntimeException("Aborting due to extension unload");
         }
@@ -738,7 +745,12 @@ abstract class Scan implements IScannerCheck {
         IHttpRequestResponse resp = null;
         Utilities.requestCount.incrementAndGet();
         long startTime = System.currentTimeMillis();
-        if (loader == null) {
+        if (false && config != null && config.get("nest-requests")) {
+
+            // should I use Turbo/h1, or H/2?
+            // ... I guess H/1
+        }
+        else if (loader == null) {
             int attempts = 0;
             while (( resp == null || resp.getResponse() == null) && attempts <= maxRetries) {
                 startTime = System.currentTimeMillis();
