@@ -27,7 +27,7 @@ import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
-    public static final String version = "1.01";
+    public static final String version = "1.02";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;

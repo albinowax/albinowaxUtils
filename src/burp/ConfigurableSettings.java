@@ -78,6 +78,7 @@ class Setting {
 
 class ConfigurableSettings {
     static private LinkedHashMap<String, String> settings = new LinkedHashMap<>();
+    static private LinkedHashMap<String, String> settingDescriptions = new LinkedHashMap<>();
     static private LinkedHashMap<String, String> defaultSettings = new LinkedHashMap<>();
     private NumberFormatter onlyInt;
 
@@ -88,11 +89,19 @@ class ConfigurableSettings {
     }
 
     void registerSetting(String key, Object value) {
+        registerSetting(key, value, null);
+    }
+
+    void registerSetting(String key, Object value, String description) {
+        if (description != null && !settingDescriptions.containsKey(key)) {
+            settingDescriptions.put(key, description);
+        }
+
         if (settings.containsKey(key)) {
             return;
         }
-
         defaultSettings.put(key, encode(value));
+
         String oldValue = Utilities.callbacks.loadExtensionSetting(key);
         if (oldValue != null) {
             putRaw(key, oldValue);
@@ -229,6 +238,9 @@ class ConfigurableSettings {
         for(String key: settingsToShow) {
             String type = getType(key);
             JLabel label = new JLabel("\n"+key+": ");
+
+            label.setToolTipText(settingDescriptions.getOrDefault(key, "No description available"));
+
             if (!settings.get(key).equals(defaultSettings.get(key))) {
                 label.setForeground(Color.magenta);
             }

@@ -29,8 +29,12 @@ class SettingsBox {
     }
 
     public void register(String name, Object value) {
+        register(name, value, null);
+    }
+
+    public void register(String name, Object value, String description) {
         settings.add(name);
-        Utilities.globalSettings.registerSetting(name, value);
+        Utilities.globalSettings.registerSetting(name, value, description);
     }
 
     public boolean contains(String key) {
@@ -59,7 +63,7 @@ class BulkScanLauncher {
         BlockingQueue<Runnable> tasks;
         tasks = new LinkedBlockingQueue<>();
 
-        Utilities.globalSettings.registerSetting("thread pool size", 8);
+        Utilities.globalSettings.registerSetting("thread pool size", 8, "The maximum number of threads this tool will spin up. This roughly correlates with the number of concurrent requests. Increasing this value will make attacks run faster, and use more computer resources.");
         ScanPool taskEngine = new ScanPool(Utilities.globalSettings.getInt("thread pool size"), Utilities.globalSettings.getInt("thread pool size"), 10, TimeUnit.MINUTES, tasks);
         Utilities.globalSettings.registerListener("thread pool size", value -> {
             Utilities.out("Updating active thread pool size to "+value);
