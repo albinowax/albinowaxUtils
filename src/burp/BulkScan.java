@@ -904,7 +904,7 @@ class Resp {
     boolean early() { return early;}
 
     boolean failed() {
-        return failed;
+        return failed || timedOut;
     }
 
     boolean timedOut() {
