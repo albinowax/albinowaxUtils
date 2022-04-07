@@ -566,14 +566,14 @@ abstract class ParamScan extends Scan {
     public ParamScan(String name) {
         super(name);
         // param-scan settings
-        scanSettings.register("params: dummy", false);
+        scanSettings.register("params: dummy", false, "When doing a parameter-based scan, add a dummy parameter to every request");
         //genericSettings.register("params: cookies", false);
         //genericSettings.register("special params", false);
         scanSettings.register("dummy param name", "utm_campaign");
-        scanSettings.register("params: query", true);
-        scanSettings.register("params: scheme", false);
-        scanSettings.register("params: scheme-host", false);
-        scanSettings.register("params: scheme-path", false);
+        scanSettings.register("params: query", true, "When doing a parameter-based scan, scan query params");
+        scanSettings.register("params: scheme", false, "When doing a parameter-based scan over HTTP/2, scan the :scheme header");
+        scanSettings.register("params: scheme-host", false, "When doing a parameter-based scan over HTTP/2, create a fake host in the :scheme header and scan it");
+        scanSettings.register("params: scheme-path", false, "When doing a parameter-based scan over HTTP/2, create a fake path in the :scheme header and scan it");
     }
 
     abstract List<IScanIssue> doScan(IHttpRequestResponse baseRequestResponse, IScannerInsertionPoint insertionPoint);
@@ -596,26 +596,26 @@ abstract class Scan implements IScannerCheck {
         scanSettings = new SettingsBox();
 
         // any-scan settings
-        scanSettings.register("thread pool size", 8);
-        scanSettings.register("use key", true);
-        scanSettings.register("key method", true);
-        scanSettings.register("key status", true);
-        scanSettings.register("key content-type", true);
-        scanSettings.register("key server", true);
-        scanSettings.register("key header names", false);
-        scanSettings.register("filter", "");
-        scanSettings.register("mimetype-filter", "");
-        scanSettings.register("resp-filter", "");
-        scanSettings.register("filter HTTP", false);
-        scanSettings.register("timeout", 10);
-        scanSettings.register("skip vulnerable hosts", false);
-        scanSettings.register("skip flagged hosts", false);
-        scanSettings.register("flag new domains", false);
+        scanSettings.register("thread pool size", 8, "The maximum number of threads created for attacks. This roughly equates to the number of concurrent HTTP requests. Increase this number to make large scale attacks go faster, or decrease it to reduce your system load.");
+        scanSettings.register("use key", true, "Avoid scanning similar endpoints by generating a key from each request's hostname and protocol, and skipping subsequent requests with matching keys.");
+        scanSettings.register("key method", true, "Include the request method in the key");
+        scanSettings.register("key status", true, "Include the response status code in the key");
+        scanSettings.register("key content-type", true, "Include the response content-type in the key");
+        scanSettings.register("key server", true, "Include the response Server header in the key");
+        scanSettings.register("key header names", false, "Include all response header names (but not values) in the key");
+        scanSettings.register("filter", "Only scan requests containing the configured string");
+        scanSettings.register("mimetype-filter", "Only scan responses with the configured string in their mimetype");
+        scanSettings.register("resp-filter", "Only scan requests with responses containing the configured string.");
+        scanSettings.register("filter HTTP", false, "Only scan HTTPS requests");
+        scanSettings.register("timeout", 10, "The time after quick a response is considered to have timed out. Tweak with caution, and be sure to adjust Burp's request timeout to match.");
+        scanSettings.register("skip vulnerable hosts", false, "Don't scan hosts already flagged as vulnerable during this scan. Reload the extension to clear flags.");
+        scanSettings.register("skip flagged hosts", false, "Don't report issues on hosts already flagged as vulnerable");
+        scanSettings.register("flag new domains", false, "Adjust the title of issues reported on hosts that don't have any other issues listed in the sitemap");
 
 
         // specific-scan settings TODO remove
-        scanSettings.register("confirmations", 5);
-        scanSettings.register("report tentative", true);
+        scanSettings.register("confirmations", 5, "The number of repeats used to confirm behaviour is consistent. Increase this to reduce false positives caused by random noise");
+        scanSettings.register("report tentative", true, "Report less reliable isssues (only relevant to Backslash Powered Scanner?)");
         scanSettings.register("include origin in cachebusters", true);
         scanSettings.register("include path in cachebusters", false);
 
