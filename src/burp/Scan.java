@@ -20,6 +20,7 @@ abstract class Scan implements IScannerCheck {
         scanSettings.register("thread pool size", 8, "The maximum number of threads created for attacks. This roughly equates to the number of concurrent HTTP requests. Increase this number to make large scale attacks go faster, or decrease it to reduce your system load.");
         scanSettings.register("use key", true, "Avoid scanning similar endpoints by generating a key from each request's hostname and protocol, and skipping subsequent requests with matching keys.");
         scanSettings.register("key method", true, "Include the request method in the key");
+        scanSettings.register("key path", false, "Include the request path in the key");
         scanSettings.register("key status", true, "Include the response status code in the key");
         scanSettings.register("key content-type", true, "Include the response content-type in the key");
         scanSettings.register("key server", true, "Include the response Server header in the key");

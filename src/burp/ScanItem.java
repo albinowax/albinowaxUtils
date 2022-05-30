@@ -79,12 +79,10 @@ class ScanItem {
                 items.add(new ScanItem(newReq, config, scan, Utilities.paramify(updated, "scheme-host", "m838jacxka", "m838jacxka")));
             }
         }
-
-
+        
         // fixme analyzeRequest is really slow, should implement this stuff myself
         boolean cookiesToScan = Utilities.globalSettings.getBoolean("params: cookie") && !"".equals(Utilities.getHeader(req.getRequest(), "Cookie"));
         boolean bodyToScan = Utilities.globalSettings.getBoolean("params: body") && !"".equals(Utilities.getBody(req.getRequest()));
-
         if (cookiesToScan || bodyToScan) {
             ArrayList<IParameter> fancyParams = new ArrayList<>(Utilities.helpers.analyzeRequest(req).getParameters());
             for (IParameter param : fancyParams) {
@@ -128,7 +126,6 @@ class ScanItem {
 
         ArrayList<PartialParam> params = Utilities.getQueryParams(req.getRequest());
 
-        // Utilities.globalSettings.getBoolean("param-scan cookies")
         for (IParameter param : params) {
             if (param.getType() != IParameter.PARAM_URL) {
                 continue;
@@ -162,6 +159,10 @@ class ScanItem {
 
         if (config.getBoolean("key method")) {
             key.append(method);
+        }
+
+        if (config.getBoolean("key path")) {
+            key.append(Utilities.getPathFromRequest(req.getRequest()).split("[?]", 1)[0]);
         }
 
         if (req.getResponse() == null && config.getBoolean("key content-type")) {
