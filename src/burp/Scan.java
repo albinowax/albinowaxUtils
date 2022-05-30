@@ -24,6 +24,7 @@ abstract class Scan implements IScannerCheck {
         scanSettings.register("key status", true, "Include the response status code in the key");
         scanSettings.register("key content-type", true, "Include the response content-type in the key");
         scanSettings.register("key server", true, "Include the response Server header in the key");
+        scanSettings.register("key input name", true, "Include the name of the parameter being scanned in the key");
         scanSettings.register("key header names", false, "Include all response header names (but not values) in the key");
         scanSettings.register("filter", "", "Only scan requests containing the configured string");
         scanSettings.register("mimetype-filter", "", "Only scan responses with the configured string in their mimetype");
