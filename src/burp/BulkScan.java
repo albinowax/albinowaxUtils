@@ -314,7 +314,17 @@ class ScanItem {
         this.scan = scan;
     }
 
-    ScanItem(IHttpRequestResponse req, ConfigurableSettings config, Scan scan, IParameter param) {
+    ScanItem(IHttpRequestResponse req, ConfigurableSettings config, Scan scan,  IParameter param, IScannerInsertionPoint insertionPoint) {
+        this.req = req;
+        this.config = config;
+        this.scan = scan;
+        this.insertionPoint = insertionPoint;
+        this.host = req.getHttpService().getHost();
+        this.prepared = true;
+        this.param = param;
+    }
+
+     ScanItem(IHttpRequestResponse req, ConfigurableSettings config, Scan scan, IParameter param) {
         this.req = req;
         this.host = req.getHttpService().getHost();
         this.config = config;
@@ -364,6 +374,33 @@ class ScanItem {
         }
 
 
+
+        // fixme analyzeRequest is really slow, should implement this stuff myself
+        boolean cookiesToScan = Utilities.globalSettings.getBoolean("params: cookie") && !"".equals(Utilities.getHeader(req.getRequest(), "Cookie"));
+        boolean bodyToScan = Utilities.globalSettings.getBoolean("params: body") && !"".equals(Utilities.getBody(req.getRequest()));
+
+        if (cookiesToScan || bodyToScan) {
+            ArrayList<IParameter> fancyParams = new ArrayList<>(Utilities.helpers.analyzeRequest(req).getParameters());
+            for (IParameter param: fancyParams) {
+                byte type = param.getType();
+                switch (type) {
+                    case IParameter.PARAM_COOKIE:
+                        if (cookiesToScan) {
+                            break;
+                        }
+                        continue;
+                    case IParameter.PARAM_BODY:
+                        if (bodyToScan) {
+                            break;
+                        }
+                    default:
+                        continue;
+                }
+                IScannerInsertionPoint insertionPoint = new ParamInsertionPoint(req.getRequest(), param);
+                items.add(new ScanItem(req, config, scan, param, insertionPoint));
+            }
+        }
+
         if (!Utilities.globalSettings.getBoolean("params: query")) {
             return items;
         }
@@ -383,11 +420,7 @@ class ScanItem {
             req = new Req(Utilities.appendToQuery(req.getRequest(), Utilities.globalSettings.getString("dummy param name")+"=z"), req.getResponse(), req.getHttpService());
         }
 
-        // analyzeRequest is really slow
-        //reqInfo = Utilities.helpers.analyzeRequest(req);
-        //ArrayList<IParameter> params = new ArrayList<>(reqInfo.getParameters());
-        // fixme why is this null?
-        ArrayList<PartialParam> params = Utilities.getParams(req.getRequest());
+        ArrayList<PartialParam> params = Utilities.getQueryParams(req.getRequest());
 
         // Utilities.globalSettings.getBoolean("param-scan cookies")
         for (IParameter param: params) {
@@ -572,6 +605,8 @@ abstract class ParamScan extends Scan {
         //genericSettings.register("special params", false);
         scanSettings.register("dummy param name", "utm_campaign");
         scanSettings.register("params: query", true, "When doing a parameter-based scan, scan query params");
+        scanSettings.register("params: body", true, "When doing a parameter-based scan, scan body params");
+        scanSettings.register("params: cookie", false, "When doing a parameter-based scan, scan cookies");
         scanSettings.register("params: scheme", false, "When doing a parameter-based scan over HTTP/2, scan the :scheme header");
         scanSettings.register("params: scheme-host", false, "When doing a parameter-based scan over HTTP/2, create a fake host in the :scheme header and scan it");
         scanSettings.register("params: scheme-path", false, "When doing a parameter-based scan over HTTP/2, create a fake path in the :scheme header and scan it");

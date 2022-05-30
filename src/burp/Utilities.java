@@ -7,9 +7,6 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
-import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,14 +14,12 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
@@ -879,8 +874,7 @@ class Utilities {
         return new String(Arrays.copyOfRange(request, 0, i));
     }
 
-    // todo support non-URL params
-    public static ArrayList<PartialParam> getParams(byte[] request) {
+    public static ArrayList<PartialParam> getQueryParams(byte[] request) {
         ArrayList<PartialParam> params = new ArrayList<>();
 
         if (request.length == 0) {
