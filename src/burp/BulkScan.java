@@ -554,7 +554,8 @@ class BulkScanItem implements Runnable {
             }
             ScanPool engine = BulkScanLauncher.getTaskEngine();
             long done = engine.getCompletedTaskCount() + 1;
-            Utilities.out("Completed "+baseItem.host + ": " + done + " of " + (engine.getQueue().size() + done) + " in " + (System.currentTimeMillis() - start) / 1000 + " seconds with " + Utilities.requestCount.get() + " requests, " + engine.candidates + " candidates and " + engine.findings + " findings ");
+
+            Utilities.out("Completed request with key " + baseItem.getKey() + ": " + done + " of " + (engine.getQueue().size() + done) + " in " + (System.currentTimeMillis() - start) / 1000 + " seconds with " + Utilities.requestCount.get() + " requests, " + engine.candidates + " candidates and " + engine.findings + " findings ");
         } catch (Exception e) {
             Utilities.showError(e);
         }
@@ -603,9 +604,9 @@ abstract class Scan implements IScannerCheck {
         scanSettings.register("key content-type", true, "Include the response content-type in the key");
         scanSettings.register("key server", true, "Include the response Server header in the key");
         scanSettings.register("key header names", false, "Include all response header names (but not values) in the key");
-        scanSettings.register("filter", "Only scan requests containing the configured string");
-        scanSettings.register("mimetype-filter", "Only scan responses with the configured string in their mimetype");
-        scanSettings.register("resp-filter", "Only scan requests with responses containing the configured string.");
+        scanSettings.register("filter", "", "Only scan requests containing the configured string");
+        scanSettings.register("mimetype-filter", "", "Only scan responses with the configured string in their mimetype");
+        scanSettings.register("resp-filter", "", "Only scan requests with responses containing the configured string.");
         scanSettings.register("filter HTTP", false, "Only scan HTTPS requests");
         scanSettings.register("timeout", 10, "The time after quick a response is considered to have timed out. Tweak with caution, and be sure to adjust Burp's request timeout to match.");
         scanSettings.register("skip vulnerable hosts", false, "Don't scan hosts already flagged as vulnerable during this scan. Reload the extension to clear flags.");

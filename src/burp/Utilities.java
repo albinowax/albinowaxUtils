@@ -1,6 +1,7 @@
 package burp;
 
 import org.apache.commons.collections4.queue.CircularFifoQueue;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +28,7 @@ import java.util.zip.GZIPOutputStream;
 
 class Utilities {
 
-    public static final String version = "1.02";
+    public static final String version = "1.03";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -1442,7 +1443,7 @@ class Utilities {
             title = bestProbe.getName();
         }
 
-        return new Fuzzable(requests, analyzeRequest(baseRequestResponse).getUrl(), title, detail, reliable, reportedSeverity); //attacks[attacks.length-2].getProbe().getName()
+        return new Fuzzable(requests, baseRequestResponse, title, detail, reliable, reportedSeverity); //attacks[attacks.length-2].getProbe().getName()
     }
 }
 
@@ -1452,8 +1453,8 @@ class Fuzzable extends CustomScanIssue {
     private final static String REMEDIATION = "This issue does not necessarily indicate a vulnerability; it is merely highlighting behaviour worthy of manual investigation. Try to determine the root cause of the observed behaviour." +
             "Refer to <a href='http://blog.portswigger.net/2016/11/backslash-powered-scanning-hunting.html'>Backslash Powered Scanning</a> for further details and guidance interpreting results. ";
 
-    Fuzzable(IHttpRequestResponse[] requests, URL url, String title, String detail, boolean reliable, String severity) {
-        super(requests[0].getHttpService(), url, requests, title, detail, severity, calculateConfidence(reliable), REMEDIATION);
+    Fuzzable(IHttpRequestResponse[] requests, IHttpRequestResponse baseRequestResponse, String title, String detail, boolean reliable, String severity) {
+        super(requests[0].getHttpService(), Utilities.analyzeRequest(baseRequestResponse).getUrl(), ArrayUtils.add(requests, 0, baseRequestResponse), title, detail, severity, calculateConfidence(reliable), REMEDIATION);
     }
 
     private static String calculateConfidence(boolean reliable) {
