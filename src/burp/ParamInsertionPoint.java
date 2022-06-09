@@ -1,10 +1,10 @@
 package burp;
 
 public class ParamInsertionPoint implements IScannerInsertionPoint {
-    private byte[] request;
-    private String name;
-    private String value;
-    private byte type;
+    byte[] request;
+    String name;
+    String value;
+    byte type;
 
 
     ParamInsertionPoint(byte[] request, IParameter param) {
@@ -19,6 +19,10 @@ public class ParamInsertionPoint implements IScannerInsertionPoint {
         this.name = name;
         this.value = value;
         this.type = type;
+    }
+
+    String calculateValue(String unparsed) {
+        return unparsed;
     }
 
     @Override
