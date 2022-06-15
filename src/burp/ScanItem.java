@@ -36,7 +36,7 @@ class ScanItem {
         this.host = req.getHttpService().getHost();
         this.config = config;
         this.param = param;
-        insertionPoint = new RawInsertionPoint(req.getRequest(), param.getName(), param.getValueStart(), param.getValueEnd());
+        insertionPoint = new RawInsertionPoint(req.getRequest(), param.getName(), param.getValueStart(), param.getValueEnd(), param.getType());
         this.prepared = true;
         this.scan = scan;
     }

@@ -10,8 +10,15 @@ class RawInsertionPoint implements IScannerInsertionPoint {
     private String baseValue;
     private String name;
 
+    private byte type;
+
     RawInsertionPoint(byte[] req, String name, int start, int end) {
+        this(req, name, start, end, IScannerInsertionPoint.INS_EXTENSION_PROVIDED);
+    }
+
+    RawInsertionPoint(byte[] req, String name, int start, int end, byte type) {
         this.name = name;
+        this.type = type;
         this.prefix = Arrays.copyOfRange(req, 0, start);
         this.suffix = Arrays.copyOfRange(req, end, req.length);
         baseValue = new String(Arrays.copyOfRange(req, start, end));
@@ -49,6 +56,6 @@ class RawInsertionPoint implements IScannerInsertionPoint {
 
     @Override
     public byte getInsertionPointType() {
-        return IScannerInsertionPoint.INS_EXTENSION_PROVIDED;
+        return type;
     }
 }
