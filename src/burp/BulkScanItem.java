@@ -28,7 +28,7 @@ class BulkScanItem implements Runnable {
             ScanPool engine = BulkScanLauncher.getTaskEngine();
             long done = engine.getCompletedTaskCount() + 1;
 
-            Utilities.out("Completed request with key " + baseItem.getKey() + ": " + done + " of " + (engine.getQueue().size() + done) + " in " + (System.currentTimeMillis() - start) / 1000 + " seconds with " + Utilities.requestCount.get() + " requests, " + engine.candidates + " candidates and " + engine.findings + " findings ");
+            Utilities.out("Completed request with key " + baseItem.getKey() + ": " + done + " of " + (engine.getQueue().size() + done) + " in " + (System.currentTimeMillis() - start) / 1000 + " seconds with " + Utilities.requestCount.get() + " requests");//, " + engine.candidates + " candidates and " + engine.findings + " findings ");
         } catch (Exception e) {
             Utilities.showError(e);
         }
