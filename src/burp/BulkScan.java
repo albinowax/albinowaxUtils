@@ -86,8 +86,6 @@ class BulkScan implements Runnable  {
 
             int i = 0;
             int queued = 0;
-            boolean remove;
-            int prepared = 0;
             int totalRequests = reqlist.size();
             String filter = Utilities.globalSettings.getString("filter");
             String respFilter = Utilities.globalSettings.getString("resp-filter");
@@ -102,7 +100,6 @@ class BulkScan implements Runnable  {
                 Utilities.out("Loop " + i++);
                 ListIterator<ScanItem> left = reqlist.listIterator();
                 while (left.hasNext()) {
-                    remove = true;
                     ScanItem req = left.next();
 
                     if (applySchemeFilter && "http".equals(req.req.getHttpService().getProtocol())) {
@@ -153,39 +150,35 @@ class BulkScan implements Runnable  {
 
                     if (scan instanceof ParamScan && !req.prepared()) {
                         ArrayList<ScanItem> newItems = req.prepare();
-                        //Utilities.log("Prepared " + prepared + " of " + totalRequests);
-                        prepared++;
+
+                        // remove the raw request - we'll add it back after
                         left.remove();
-                        remove = false;
-                        if (newItems.size() == 0) {
-                            //Utilities.log("No params in request");
-                            continue;
-                        }
-                        req = newItems.remove(0);
+
                         for (ScanItem item : newItems) {
                             String key = item.getKey();
-                            //Utilities.log("Param Key: "+key);
                             if (!keyCache.contains(key)) {
                                 left.add(item);
                             }
                         }
+
+                        // re-queue the raw request
+                        left.add(req);
+                        req = left.previous();
+                        continue;
                     }
 
                     if (config.getBoolean("use key")) {
                         String key = req.getKey();
                         if (keyCache.contains(key)) {
-                            if (remove) {
-                                left.remove();
-                            }
+                            left.remove();
                             continue;
                         }
                         keyCache.add(key);
                     }
 
                     cache.add(host);
-                    if (remove) {
-                        left.remove();
-                    }
+                    left.remove();
+
                     Utilities.log("Adding request on " + host + " to queue");
                     queued++;
                     taskEngine.execute(new BulkScanItem(scan, req, start));

@@ -152,7 +152,7 @@ class ScanItem {
 
         key.append(req.getHttpService().getHost());
 
-        if (scan instanceof ParamScan && config.getBoolean("key input name")) {
+        if (param != null && scan instanceof ParamScan && config.getBoolean("key input name")) {
             key.append(param.getName());
             key.append(param.getType());
         }

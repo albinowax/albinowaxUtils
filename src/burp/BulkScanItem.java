@@ -17,9 +17,10 @@ class BulkScanItem implements Runnable {
     public void run() {
         try {
             if (scanner.shouldScan(baseReq)) {
-                if (scanner instanceof ParamScan) {
+                if (baseItem.insertionPoint != null) {
                     scanner.doActiveScan(baseReq, baseItem.insertionPoint);
-                } else {
+                }
+                else {
                     scanner.doScan(baseReq);
                 }
             } else {
