@@ -20,6 +20,10 @@ abstract class ParamScan extends Scan {
 
     abstract List<IScanIssue> doScan(IHttpRequestResponse baseRequestResponse, IScannerInsertionPoint insertionPoint);
 
+    List<IScanIssue> doScan(byte[] baseReq, IHttpService service) {
+        return null;
+    }
+
     public List<IScanIssue> doActiveScan(IHttpRequestResponse baseRequestResponse, IScannerInsertionPoint insertionPoint) {
         // todo convert insertion point into appropriate format
         return doScan(baseRequestResponse, insertionPoint);
