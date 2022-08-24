@@ -54,7 +54,7 @@ abstract class Scan implements IScannerCheck {
     }
 
     List<IScanIssue> doScan(byte[] baseReq, IHttpService service) {
-        throw new RuntimeException("doScan(byte[] baseReq, IHttpService service) invoked but not implemented");
+        throw new RuntimeException("doScan(byte[] baseReq, IHttpService service) invoked but not implemented on class "+this.name);
     }
 
     List<IScanIssue> doScan(IHttpRequestResponse baseRequestResponse) {

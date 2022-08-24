@@ -11,14 +11,14 @@ public class KitchenSink extends ParamScan {
     }
 
     @Override
-    List<IScanIssue> doScan(byte[] baseReq, IHttpService service) {
+    List<IScanIssue> doScan(IHttpRequestResponse baseRequestResponse) {
         Utilities.out("Kicking off request scans");
         for (Scan scan: BulkScan.scans) {
             if (scan == this) {
                 continue;
             }
             Utilities.out("Queueing reuest scan: "+scan.name);
-            scan.doScan(baseReq, service);
+            scan.doScan(baseRequestResponse);
         }
         return null;
     }
