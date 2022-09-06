@@ -17,7 +17,7 @@ public class KitchenSink extends ParamScan {
             if (scan == this) {
                 continue;
             }
-            Utilities.out("Queueing reuest scan: "+scan.name);
+            Utilities.out("Queueing request scan: "+scan.name);
             scan.doScan(baseRequestResponse);
         }
         return null;
