@@ -19,6 +19,7 @@ class BulkScanLauncher {
         tasks = new LinkedBlockingQueue<>();
 
         Utilities.globalSettings.registerSetting("thread pool size", 8, "The maximum number of threads this tool will spin up. This roughly correlates with the number of concurrent requests. Increasing this value will make attacks run faster, and use more computer resources.");
+        Utilities.globalSettings.registerSetting("canary", Utilities.randomString(8), "Static canary string used for input reflection detection sometimes");
         ScanPool taskEngine = new ScanPool(Utilities.globalSettings.getInt("thread pool size"), Utilities.globalSettings.getInt("thread pool size"), 10, TimeUnit.MINUTES, tasks);
         Utilities.globalSettings.registerListener("thread pool size", value -> {
             Utilities.out("Updating active thread pool size to " + value);

@@ -238,10 +238,11 @@ class Utilities {
 
     static Attack buildTransformationAttack(IHttpRequestResponse baseRequestResponse, IScannerInsertionPoint insertionPoint, String leftAnchor, String payload, String rightAnchor) {
 
-        IHttpRequestResponse req = attemptRequest(baseRequestResponse.getHttpService(),
+        Resp req = Scan.request(baseRequestResponse.getHttpService(),
                 insertionPoint.buildRequest(helpers.stringToBytes(insertionPoint.getBaseValue() + leftAnchor + payload + rightAnchor)));
 
-        return new Attack(Utilities.highlightRequestResponse(req, leftAnchor, leftAnchor+payload+rightAnchor, insertionPoint), null, payload, "");
+        req.setHighlight(leftAnchor+payload+rightAnchor);
+        return new Attack(req, null, payload, "");
     }
 
     static boolean isInPath(IScannerInsertionPoint insertionPoint) {
@@ -1204,11 +1205,11 @@ class Utilities {
         return tmp.getBytes(StandardCharsets.ISO_8859_1);
     }
 
-    static IHttpRequestResponse attemptRequest(IHttpService service, byte[] req) {
-        return attemptRequest(service, req, false);
+    static IHttpRequestResponse attemptRequest_deprecated(IHttpService service, byte[] req) {
+        return attemptRequest_deprecated(service, req, false);
     }
 
-    static IHttpRequestResponse attemptRequest(IHttpService service, byte[] req, boolean forceHttp1) {
+    static IHttpRequestResponse attemptRequest_deprecated(IHttpService service, byte[] req, boolean forceHttp1) {
         if(unloaded.get()) {
             Utilities.out("Extension unloaded - aborting attack");
             throw new RuntimeException("Extension unloaded");

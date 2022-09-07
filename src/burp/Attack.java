@@ -12,7 +12,7 @@ class Attack {
     final static int DYNAMIC = -2;
     final static int INCALCULABLE = -3;
 
-    private IHttpRequestResponse firstRequest;
+    private Resp firstRequest;
     private HashMap<String, Object> firstFingerprint;
 
     HashMap<String, Object> getLastPrint() {
@@ -21,11 +21,11 @@ class Attack {
 
     private HashMap<String, Object> lastPrint;
 
-    IHttpRequestResponse getLastRequest() {
+    Resp getLastRequest() {
         return lastRequest;
     }
 
-    private IHttpRequestResponse lastRequest;
+    private Resp lastRequest;
 
     private String[] keys = new String[]{Utilities.globalSettings.getString("canary"), "\",\"", "true", "false", "\"\"", "[]", "</html>", "error", "exception", "invalid", "warning", "stack", "sql syntax", "divisor", "divide", "ora-", "division", "infinity", "<script", "<div"};
 
@@ -40,21 +40,21 @@ class Attack {
     // todo add response end?
     private int responseReflections = UNINITIALISED;
 
-    public Attack(IHttpRequestResponse req, Probe probe, String payload, String anchor) {
+    public Attack(Resp req, Probe probe, String payload, String anchor) {
         this.firstRequest = req;
         this.lastRequest = req;
         this.probe = probe;
         this.payload = payload;
         this.anchor = anchor;
-        add(req.getResponse(), anchor);
+        add(req, anchor);
         firstFingerprint = fingerprint;
         this.lastPrint = fingerprint;
     }
 
-    public Attack(IHttpRequestResponse req) {
+    public Attack(Resp req) {
         this.firstRequest = req;
         this.lastRequest = req;
-        add(req.getResponse(), "");
+        add(req, "");
         firstFingerprint = fingerprint;
         this.lastPrint = fingerprint;
     }
@@ -70,7 +70,7 @@ class Attack {
         return firstFingerprint;
     }
 
-    public IHttpRequestResponse getFirstRequest() {
+    public Resp getFirstRequest() {
         return firstRequest;
     }
 
@@ -98,11 +98,11 @@ class Attack {
         return probe;
     }
 
-    private Attack add(byte[] response, String anchor) {
+    private Attack add(Resp resp, String anchor) {
         assert (firstRequest != null);
 
 
-        response = Utilities.filterResponse(response);
+        byte[] response = Utilities.filterResponse(resp.getReq().getResponse());
         responseKeywords.updateWith(response);
         responseDetails.updateWith(response);
 
@@ -129,7 +129,7 @@ class Attack {
             anchor = attack.anchor;
             probe = attack.getProbe();
             payload = attack.payload;
-            add(attack.getFirstRequest().getResponse(), anchor);
+            add(attack.getFirstRequest(), anchor);
             firstFingerprint = fingerprint;
         }
 

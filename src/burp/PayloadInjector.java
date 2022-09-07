@@ -139,19 +139,20 @@ class PayloadInjector {
         }
 
 
-        IHttpRequestResponse req = buildRequest(payload, probe.useCacheBuster(), mutation);
+        Resp req = buildRequest(payload, probe.useCacheBuster(), mutation);
         if(randomAnchor) {
-            req = Utilities.highlightRequestResponse(req, anchor, anchor, insertionPoint);
+            req.setHighlight(anchor);
+            //req = Utilities.highlightRequestResponse(req, anchor, anchor, insertionPoint);
         }
 
         return new Attack(req, probe, base_payload, anchor);
     }
 
-    IHttpRequestResponse buildRequest(String payload, boolean needCacheBuster) {
+    Resp buildRequest(String payload, boolean needCacheBuster) {
         return buildRequest(payload, needCacheBuster, null);
     }
 
-    IHttpRequestResponse buildRequest(String payload, boolean needCacheBuster, String mutation) {
+    Resp buildRequest(String payload, boolean needCacheBuster, String mutation) {
 
         byte[] request = insertionPoint.buildRequest(payload.getBytes());
 
@@ -171,7 +172,7 @@ class PayloadInjector {
             }
         }
 
-        IHttpRequestResponse requestResponse = burp.Utilities.attemptRequest(service, request, forceHttp1);
+        Resp requestResponse = burp.Scan.request(service, request, 0, forceHttp1);
         //Utilities.out("Payload: "+payload+"|"+baseRequestResponse.getHttpService().getHost());
 
         return requestResponse;// Utilities.buildRequest(baseRequestResponse, insertionPoint, payload)
@@ -201,7 +202,7 @@ class PayloadInjector {
             }
         }
 
-        IHttpRequestResponse requestResponse = burp.Utilities.attemptRequest(service, request, forceHttp1);
+        Resp requestResponse = Scan.request(service, request, 0, forceHttp1);
         return new Attack(requestResponse, null, null, "");
     }
 

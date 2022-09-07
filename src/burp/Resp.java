@@ -2,7 +2,7 @@ package burp;
 
 import java.util.Arrays;
 
-class Resp {
+class Resp implements IHttpRequestResponse {
     private IHttpRequestResponse req;
     private IResponseInfo info;
     private IResponseVariations attributes;
@@ -87,5 +87,55 @@ class Resp {
 
     boolean timedOut() {
         return timedOut;
+    }
+
+    @Override
+    public byte[] getRequest() {
+        return req.getRequest();
+    }
+
+    @Override
+    public void setRequest(byte[] bytes) {
+        req.setRequest(bytes);
+    }
+
+    @Override
+    public byte[] getResponse() {
+        return req.getResponse();
+    }
+
+    @Override
+    public void setResponse(byte[] bytes) {
+        req.setResponse(bytes);
+    }
+
+    @Override
+    public String getComment() {
+        return req.getComment();
+    }
+
+    @Override
+    public void setComment(String s) {
+        req.setComment(s);
+    }
+
+    @Override
+    public String getHighlight() {
+        return req.getHighlight();
+    }
+
+    @Override
+    public void setHighlight(String s) {
+        req.setHighlight(s);
+    }
+
+    @Override
+    public IHttpService getHttpService() {
+        return req.getHttpService();
+    }
+
+    @Override
+    public void setHttpService(IHttpService iHttpService) {
+        req.setHttpService(iHttpService);
     }
 }

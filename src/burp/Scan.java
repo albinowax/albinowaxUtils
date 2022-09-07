@@ -169,67 +169,40 @@ abstract class Scan implements IScannerCheck {
             throw new RuntimeException("Aborting due to extension unload");
         }
 
-        IHttpRequestResponse resp = null;
+        IHttpRequestResponse iRequestResponse = null;
         Utilities.requestCount.incrementAndGet();
         long startTime = System.currentTimeMillis();
-        if (false && config != null && config.get("nest-requests")) {
 
-            // should I use Turbo/h1, or H/2?
-            // ... I guess H/1
-        } else if (loader == null) {
-            int attempts = 0;
-            while ((resp == null || resp.getResponse() == null) && attempts <= maxRetries) {
-                startTime = System.currentTimeMillis();
-                try {
-                    byte[] responseBytes;
-                    if (forceHTTP1 || !Utilities.supportsHTTP2) {
-                        req = Utilities.replaceFirst(req, "HTTP/2\r\n", "HTTP/1.1\r\n");
-                    }
-
-                    if (Utilities.supportsHTTP2) {
-                        //responseBytes = Utilities.callbacks.makeHttpRequest(service, req).getResponse();
-                        responseBytes = Utilities.callbacks.makeHttpRequest(service, req, forceHTTP1).getResponse();
-                    } else {
-                        responseBytes = Utilities.callbacks.makeHttpRequest(service, req).getResponse();
-                    }
-                    resp = new Req(req, responseBytes, service);
-                } catch (NoSuchMethodError e) {
-                    Utilities.supportsHTTP2 = false;
-                    continue;
-                } catch (RuntimeException e) {
-                    Utilities.out("Recovering from request exception: " + service.getHost());
-                    Utilities.err("Recovering from request exception: " + service.getHost());
-                    resp = new Req(req, null, service);
+        int attempts = 0;
+        while ((iRequestResponse == null || iRequestResponse.getResponse() == null) && attempts <= maxRetries) {
+            startTime = System.currentTimeMillis();
+            try {
+                byte[] responseBytes;
+                if (forceHTTP1 || !Utilities.supportsHTTP2) {
+                    req = Utilities.replaceFirst(req, "HTTP/2\r\n", "HTTP/1.1\r\n");
                 }
-                attempts += 1;
+
+                if (Utilities.supportsHTTP2) {
+                    //responseBytes = Utilities.callbacks.makeHttpRequest(service, req).getResponse();
+                    responseBytes = Utilities.callbacks.makeHttpRequest(service, req, forceHTTP1).getResponse();
+                } else {
+                    responseBytes = Utilities.callbacks.makeHttpRequest(service, req).getResponse();
+                }
+                iRequestResponse = new Req(req, responseBytes, service);
+            } catch (NoSuchMethodError e) {
+                Utilities.supportsHTTP2 = false;
+                continue;
+            } catch (RuntimeException e) {
+                //Utilities.out("Recovering from request exception: " + service.getHost());
+                Utilities.err("Recovering from request exception: " + service.getHost());
             }
-        } else {
-            throw new NotImplementedException("hmm");
-//            byte[] response = loader.getResponse(service.getHost(), req);
-//            if (response == null) {
-//                try {
-//                    String template = Utilities.helpers.bytesToString(req).replace(service.getHost(), "%d");
-//                    String name = Integer.toHexString(template.hashCode());
-//                    PrintWriter out = new PrintWriter("/Users/james/PycharmProjects/zscanpipeline/generated-requests/"+name);
-//                    out.print(template);
-//                    out.close();
-//                } catch (FileNotFoundException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                Utilities.out("Couldn't find response. Sending via Burp instead");
-//                Utilities.out(Utilities.helpers.bytesToString(req));
-//                return new Resp(Utilities.callbacks.makeHttpRequest(service, req, forceHTTP1), startTime);
-//                //throw new RuntimeException("Couldn't find response");
-//            }
-//
-//            if (Arrays.equals(response, "".getBytes())) {
-//                response = null;
-//            }
-//
-//            resp = new Req(req, response, service);
+            attempts += 1;
         }
 
-        return new Resp(resp, startTime);
+        if (iRequestResponse == null) {
+            iRequestResponse = new Req(req, null, service);
+        }
+
+        return new Resp(iRequestResponse, startTime);
     }
 }
