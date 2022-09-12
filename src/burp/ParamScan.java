@@ -3,6 +3,7 @@ package burp;
 import java.util.List;
 
 abstract class ParamScan extends Scan {
+
     public ParamScan(String name) {
         super(name);
         // param-scan settings
@@ -27,6 +28,11 @@ abstract class ParamScan extends Scan {
     public List<IScanIssue> doActiveScan(IHttpRequestResponse baseRequestResponse, IScannerInsertionPoint insertionPoint) {
         // todo convert insertion point into appropriate format
         return doScan(baseRequestResponse, insertionPoint);
+    }
+
+    @Override
+    boolean supportsRequestScan() {
+        return false;
     }
 
 }

@@ -34,4 +34,9 @@ public class KitchenSink extends ParamScan {
         }
         return null;
     }
+
+    @Override
+    boolean supportsRequestScan() {
+        return true;
+    }
 }

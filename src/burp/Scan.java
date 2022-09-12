@@ -8,6 +8,7 @@ import java.util.List;
 
 abstract class Scan implements IScannerCheck {
     static ZgrabLoader loader = null;
+
     String name = "";
     SettingsBox scanSettings;
 
@@ -51,6 +52,10 @@ abstract class Scan implements IScannerCheck {
 //        settings.addAll(BulkScanLauncher.genericSettings.getSettings());
 //        return new ArrayList<>(settings);
         return scanSettings.getSettings();
+    }
+
+    boolean supportsRequestScan() {
+        return true;
     }
 
     List<IScanIssue> doScan(byte[] baseReq, IHttpService service) {
