@@ -986,11 +986,14 @@ class Utilities {
         int end = request.length;
         while (i < end) {
             int line_start = i;
-            i+=1; // allow headers starting with whitespace
-            while (i < end && request[i++] != ' ') {
+            i+=1;
+            //Fixed bug where header values without a starting space would throw
+            while (i < end && request[i++] != ':') {
             }
-            byte[] header_name = Arrays.copyOfRange(request, line_start, i - 2);
-            int headerValueStart = i;
+            //Move back one character because we're looking for the colon now
+            byte[] header_name = Arrays.copyOfRange(request, line_start, i - 1);
+            //If the header value contains a starting space skip it, so we have same behaviour as before
+            int headerValueStart = request[i+1] == ' ' ? ++i: i;
             while (i < end && request[i++] != '\n') {
             }
             if (i == end) {
