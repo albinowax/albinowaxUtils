@@ -33,19 +33,26 @@ class Resp implements IHttpRequestResponse {
     }
 
     Resp(IHttpRequestResponse req, long startTime) {
+        this(req, startTime,  System.currentTimeMillis());
+    }
+
+    Resp(IHttpRequestResponse req, long startTime, long endTime) {
         this.req = req;
 
         byte[] fail = Utilities.helpers.stringToBytes("null");
         byte[] earlyResponse = Utilities.helpers.stringToBytes("early-response");
         // fixme will interact badly with distribute-damage
-        int burpTimeout = Integer.parseInt(Utilities.getSetting("project_options.connections.timeouts.normal_timeout"));
         int scanTimeout = Utilities.globalSettings.getInt("timeout") * 1000;
 
         early = Arrays.equals(req.getResponse(), earlyResponse);
         failed = req.getResponse() == null || req.getResponse().length == 0 || Arrays.equals(req.getResponse(), fail) || early;
+        responseTime = endTime - startTime;
+//        if (responseTime > 50) {
+//            Utilities.out(new String(req.getRequest()));
+//            throw new RuntimeException("mmm");
+//        }
 
-        responseTime = System.currentTimeMillis() - startTime;
-        if (burpTimeout == scanTimeout) {
+        if (Utilities.burpTimeout == scanTimeout) {
             if (failed && responseTime > scanTimeout) {
                 this.timedOut = true;
             }
@@ -53,14 +60,12 @@ class Resp implements IHttpRequestResponse {
             if (responseTime > scanTimeout) {
                 this.timedOut = true;
                 if (failed) {
-                    Utilities.out("TImeout with response. Start time: " + startTime + " Current time: " + System.currentTimeMillis() + " Difference: " + (System.currentTimeMillis() - startTime) + " Tolerance: " + scanTimeout);
+                    Utilities.out("Timeout with response. Start time: " + startTime + " Current time: " + System.currentTimeMillis() + " Difference: " + (System.currentTimeMillis() - startTime) + " Tolerance: " + scanTimeout);
                 }
             }
         }
         if (!this.failed) {
-            this.info = Utilities.helpers.analyzeResponse(req.getResponse());
-            this.attributes = Utilities.helpers.analyzeResponseVariations(req.getResponse());
-            this.status = this.info.getStatusCode();
+            this.status = Utilities.getCode(req.getResponse());
         }
         timestamp = System.currentTimeMillis();
     }
@@ -70,10 +75,16 @@ class Resp implements IHttpRequestResponse {
     }
 
     IResponseInfo getInfo() {
+        if (info == null) {
+            info = Utilities.helpers.analyzeResponse(req.getResponse());
+        }
         return info;
     }
 
     IResponseVariations getAttributes() {
+        if (attributes == null) {
+            attributes = Utilities.helpers.analyzeResponseVariations(req.getResponse());
+        }
         return attributes;
     }
 
