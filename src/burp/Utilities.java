@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 class Utilities {
 
-    public static final String version = "1.04";
+    public static final String version = "1.10";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
