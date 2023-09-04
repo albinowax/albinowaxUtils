@@ -96,10 +96,17 @@ class Resp implements IHttpRequestResponse {
                 return failed? 1: 0;
             case "timedout":
                 return timedOut? 1: 0;
-            default:
-                return getAttributes().getAttributeValue(attribute, 0);
+        }
+
+        try {
+            return getAttributes().getAttributeValue(attribute, 0);
+        } catch (IllegalArgumentException e) {
+            Utilities.out("Invalid attribute: "+attribute);
+            Utilities.out("Supported attributes: "+getAttributes().getInvariantAttributes() + getAttributes().getVariantAttributes());
+            throw new RuntimeException("Invalid attribute: "+attribute);
         }
     }
+
 
     boolean early() {
         return early;
