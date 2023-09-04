@@ -88,6 +88,19 @@ class Resp implements IHttpRequestResponse {
         return attributes;
     }
 
+    long getAttribute(String attribute) {
+        switch(attribute) {
+            case "time":
+                return responseTime;
+            case "failed":
+                return failed? 1: 0;
+            case "timedout":
+                return timedOut? 1: 0;
+            default:
+                return getAttributes().getAttributeValue(attribute, 0);
+        }
+    }
+
     boolean early() {
         return early;
     }
