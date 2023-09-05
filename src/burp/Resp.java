@@ -1,9 +1,21 @@
 package burp;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
-class Resp implements IHttpRequestResponse {
+import burp.api.montoya.core.Annotations;
+import burp.api.montoya.core.Marker;
+import burp.api.montoya.http.HttpService;
+import burp.api.montoya.http.handler.TimingData;
+import burp.api.montoya.http.message.ContentType;
+import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.responses.HttpResponse;
+
+class Resp implements IHttpRequestResponse/*, HttpRequestResponse*/ {
     private IHttpRequestResponse req;
+    private HttpRequestResponse montoyaReq;
     private IResponseInfo info;
     private IResponseVariations attributes;
 
@@ -30,6 +42,11 @@ class Resp implements IHttpRequestResponse {
 
     Resp(IHttpRequestResponse req) {
         this(req, System.currentTimeMillis());
+    }
+
+    // converts Montoya HttpRequestResponse to IHttpRequestResponse
+    Resp(HttpRequestResponse req) {
+        this(new Req(req), System.currentTimeMillis());
     }
 
     Resp(IHttpRequestResponse req, long startTime) {
@@ -169,4 +186,84 @@ class Resp implements IHttpRequestResponse {
     public void setHttpService(IHttpService iHttpService) {
         req.setHttpService(iHttpService);
     }
+
+//    @Override
+//    public HttpRequest request() {
+//        return montoyaReq.request();
+//    }
+//
+//    @Override
+//    public HttpResponse response() {
+//        return montoyaReq.response();
+//    }
+//
+//    @Override
+//    public Annotations annotations() {
+//        return montoyaReq.annotations();
+//    }
+//
+//    @Override
+//    public Optional<TimingData> timingData() {
+//        return montoyaReq.timingData();
+//    }
+//
+//    @Override
+//    public String url() {
+//        return montoyaReq.url();
+//    }
+//
+//    @Override
+//    public HttpService httpService() {
+//        return montoyaReq.httpService();
+//    }
+//
+//    @Override
+//    public ContentType contentType() {
+//        return montoyaReq.contentType();
+//    }
+//
+//    @Override
+//    public short statusCode() {
+//        return montoyaReq.statusCode();
+//    }
+//
+//    @Override
+//    public List<Marker> requestMarkers() {
+//        return montoyaReq.requestMarkers();
+//    }
+//
+//    @Override
+//    public List<Marker> responseMarkers() {
+//        return montoyaReq.responseMarkers();
+//    }
+//
+//    @Override
+//    public HttpRequestResponse copyToTempFile() {
+//        return montoyaReq.copyToTempFile();
+//    }
+//
+//    @Override
+//    public HttpRequestResponse withAnnotations(Annotations annotations) {
+//        return montoyaReq.withAnnotations(annotations);
+//    }
+//
+//    @Override
+//    public HttpRequestResponse withRequestMarkers(List<Marker> requestMarkers) {
+//        return montoyaReq.withRequestMarkers(requestMarkers);
+//    }
+//
+//    @Override
+//    public HttpRequestResponse withRequestMarkers(Marker... requestMarkers) {
+//        return montoyaReq.withRequestMarkers(requestMarkers);
+//    }
+//
+//    @Override
+//    public HttpRequestResponse withResponseMarkers(List<Marker> responseMarkers) {
+//        return montoyaReq.withResponseMarkers(responseMarkers);
+//    }
+//
+//    @Override
+//    public HttpRequestResponse withResponseMarkers(Marker... responseMarkers) {
+//        return montoyaReq.withResponseMarkers(responseMarkers);
+//    }
 }

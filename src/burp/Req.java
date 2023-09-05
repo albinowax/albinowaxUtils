@@ -1,5 +1,10 @@
 package burp;
 
+import burp.api.montoya.core.ByteArray;
+import burp.api.montoya.http.HttpService;
+import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.http.message.requests.HttpRequest;
+
 class Req implements IHttpRequestResponse {
 
     private byte[] req;
@@ -10,6 +15,14 @@ class Req implements IHttpRequestResponse {
         this.req = req;
         this.resp = resp;
         this.service = service;
+    }
+
+    Req(HttpRequestResponse resp) {
+        this.req = resp.request().toByteArray().getBytes();
+        if (resp.response() != null) {
+            this.resp = resp.response().toByteArray().getBytes();
+        }
+        this.service = Utilities.helpers.buildHttpService(resp.httpService().host(), resp.httpService().port(), resp.httpService().secure());
     }
 
     @Override

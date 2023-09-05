@@ -1,5 +1,8 @@
 package burp;
 
+import burp.api.montoya.core.ByteArray;
+import burp.api.montoya.http.HttpService;
+import burp.api.montoya.http.message.requests.HttpRequest;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.CharUtils;
@@ -1158,7 +1161,10 @@ class Utilities {
     static IRequestInfo analyzeRequest(byte[] request, IHttpService service) {
         return new LazyRequestInfo(request, service);
     }
-
+    static HttpRequest buildMontoyaReq(byte[] baseReq, IHttpService service) {
+        HttpService montoyaService = HttpService.httpService(service.getHost(), service.getPort(), "https".equals(service.getProtocol()));
+        return HttpRequest.httpRequest(montoyaService, ByteArray.byteArray(baseReq));
+    }
 }
 
 
