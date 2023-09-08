@@ -1165,6 +1165,14 @@ class Utilities {
         HttpService montoyaService = HttpService.httpService(service.getHost(), service.getPort(), "https".equals(service.getProtocol()));
         return HttpRequest.httpRequest(montoyaService, ByteArray.byteArray(baseReq));
     }
+
+    static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
 
 
