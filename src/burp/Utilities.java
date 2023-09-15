@@ -1,5 +1,6 @@
 package burp;
 
+import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.message.requests.HttpRequest;
@@ -41,6 +42,8 @@ class Utilities {
 
     static IBurpExtenderCallbacks callbacks;
     static IExtensionHelpers helpers;
+
+    static MontoyaApi montoyaApi;
     static HashSet<String> phpFunctions = new HashSet<>();
     static HashSet<String> wafParams = new HashSet<>();
     static ArrayList<String> paramNames = new ArrayList<>();
