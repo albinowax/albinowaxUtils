@@ -230,7 +230,19 @@ class ConfigurableSettings {
     ConfigurableSettings showSettings(ArrayList<String> settingsToShow) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(0, 6));
-        panel.setSize(800, 800);
+        // panel.setSize(800, 800);
+        JScrollPane scrollPane = new JScrollPane(panel);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int requiredHeight = (settingsToShow.size() / 3) * 30;
+        int targetWidth = Math.min(1400, screenSize.width-300);
+        int targetHeight = Math.min(requiredHeight+100, screenSize.height-300);
+        scrollPane.setPreferredSize(new Dimension(targetWidth, targetHeight));
+        
+        //scrollPane.setPreferredSize(new Dimension(targetWidth, targetHeight));
+        //scrollPane.setMaximumSize(new Dimension(screenSize.width-500, screenSize.height-500));
+        //scrollPane.setPreferredSize(new Dimension(700,300));
+        //panel.add(scrollPane);
+
 
         HashMap<String, Object> configured = new HashMap<>();
         JButton buttonResetSettings = new JButton("Reset Visible Settings");
@@ -285,7 +297,7 @@ class ConfigurableSettings {
             }
         } );
 
-        int result = JOptionPane.showConfirmDialog(Utilities.getBurpFrame(), panel, "Attack Config", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(Utilities.getBurpFrame(), scrollPane, "Attack Config", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {
             for(String key: configured.keySet()) {
                 Object val = configured.get(key);
