@@ -233,7 +233,7 @@ class ConfigurableSettings {
         // panel.setSize(800, 800);
         JScrollPane scrollPane = new JScrollPane(panel);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int requiredHeight = (settingsToShow.size() / 3) * 30;
+        int requiredHeight = (settingsToShow.size() / 3) * 25;
         int targetWidth = Math.min(1400, screenSize.width-300);
         int targetHeight = Math.min(requiredHeight+100, screenSize.height-300);
         scrollPane.setPreferredSize(new Dimension(targetWidth, targetHeight));
