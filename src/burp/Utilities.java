@@ -536,7 +536,6 @@ class Utilities {
         return replace(request, find, replace, 1);
     }
 
-
     private static byte[] replace(byte[] request, byte[] find, byte[] replace, int limit) {
         List<int[]> matches = getMatches(request, find, -1);
         if (limit != -1 && limit < matches.size()) {
@@ -862,6 +861,12 @@ class Utilities {
             i+=1; // allow headers starting with whitespace
             while (i < end && request[i++] != ' ') {
             }
+
+            // don't allow wrapped headers
+            if (i == line_start+1) {
+                break;
+            }
+
             byte[] header_name = Arrays.copyOfRange(request, line_start, i - 2);
             int headerValueStart = i;
             while (i < end && request[i++] != '\n') {
