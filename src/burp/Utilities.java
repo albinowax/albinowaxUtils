@@ -1184,7 +1184,7 @@ class Utilities {
 
     static HttpRequestResponse buildMontoyaResp(Resp resp) {
         HttpRequest monReq = buildMontoyaReq(resp.getRequest(), resp.getHttpService());
-        
+
         HttpRequestResponse monReqResp;
         if (resp.getResponse() != null) {
             HttpResponse monResp = HttpResponse.httpResponse(ByteArray.byteArray(resp.getResponse()));
