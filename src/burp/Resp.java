@@ -13,7 +13,7 @@ import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 
-class Resp implements IHttpRequestResponse/*, HttpRequestResponse*/ {
+class Resp implements IHttpRequestResponse {
     private IHttpRequestResponse req;
     private HttpRequestResponse montoyaReq;
     private IResponseInfo info;
@@ -40,6 +40,10 @@ class Resp implements IHttpRequestResponse/*, HttpRequestResponse*/ {
     private boolean failed = false;
     private boolean early = false;
 
+    private boolean first = true;
+
+
+
     Resp(IHttpRequestResponse req) {
         this(req, System.currentTimeMillis());
     }
@@ -54,7 +58,12 @@ class Resp implements IHttpRequestResponse/*, HttpRequestResponse*/ {
     }
 
     Resp(IHttpRequestResponse req, long startTime, long endTime) {
+        this(req, startTime, endTime, true);
+    }
+
+    Resp(IHttpRequestResponse req, long startTime, long endTime, boolean first) {
         this.req = req;
+        this.first = first;
 
         byte[] fail = Utilities.helpers.stringToBytes("null");
         byte[] earlyResponse = Utilities.helpers.stringToBytes("early-response");
@@ -109,6 +118,8 @@ class Resp implements IHttpRequestResponse/*, HttpRequestResponse*/ {
         switch(attribute) {
             case "time":
                 return responseTime;
+            case "first":
+                return first? 1: 0;
             case "failed":
                 return failed? 1: 0;
             case "timedout":

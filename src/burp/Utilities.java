@@ -3,7 +3,9 @@ package burp;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.HttpService;
+import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.responses.HttpResponse;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.CharUtils;
@@ -113,12 +115,18 @@ class Utilities {
         Utilities.out("Using albinowaxUtils v"+version);
         Utilities.out("This extension should be run on the latest version of Burp Suite. Using an older version of Burp may cause impaired functionality.");
 
+
+
         if (settings != null) {
             globalSettings = new ConfigurableSettings(settings);
+            globalSettings.registerSetting("timeout", burpTimeout, "The time after quick a response is considered to have timed out. Tweak with caution, and be sure to adjust Burp's request timeout to match.");
+
             if (DEBUG) {
                 globalSettings.printSettings();
             }
         }
+
+
     }
 
     static boolean isBurpPro() {
@@ -1172,6 +1180,22 @@ class Utilities {
     static HttpRequest buildMontoyaReq(byte[] baseReq, IHttpService service) {
         HttpService montoyaService = HttpService.httpService(service.getHost(), service.getPort(), "https".equals(service.getProtocol()));
         return HttpRequest.httpRequest(montoyaService, ByteArray.byteArray(baseReq));
+    }
+
+    static HttpRequestResponse buildMontoyaResp(Resp resp) {
+        HttpRequest monReq = buildMontoyaReq(resp.getRequest(), resp.getHttpService());
+        
+        HttpRequestResponse monReqResp;
+        if (resp.getResponse() != null) {
+            HttpResponse monResp = HttpResponse.httpResponse(ByteArray.byteArray(resp.getResponse()));
+            monReqResp = HttpRequestResponse.httpRequestResponse(monReq, monResp);
+        } else {
+            monReqResp = HttpRequestResponse.httpRequestResponse(monReq, HttpResponse.httpResponse());
+        }
+
+        MontoyaRequestResponse done = new MontoyaRequestResponse(monReqResp);
+        done.setTime(resp.getResponseTime());
+        return done;
     }
 
     static void sleep(long ms) {
