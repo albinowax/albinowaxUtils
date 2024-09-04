@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 class Utilities {
 
-    public static final String version = "1.3";
+    public static final String version = "1.4";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -1128,10 +1128,12 @@ class Utilities {
 
 
     static byte[] addCacheBuster(byte[] req, String cacheBuster) {
-        if (cacheBuster != null) {
-            req = Utilities.appendToQuery(req, cacheBuster + "=1");
-        } else {
-            cacheBuster = Utilities.generateCanary();
+        if (globalSettings.getBoolean("include query-param in cachebusters")) {
+            if (cacheBuster != null) {
+                req = Utilities.appendToQuery(req, cacheBuster + "=1");
+            } else {
+                cacheBuster = Utilities.generateCanary();
+            }
         }
 
         if (globalSettings.getBoolean("include origin in cachebusters")) {

@@ -297,7 +297,9 @@ class ConfigurableSettings {
             }
         } );
 
-        int result = JOptionPane.showConfirmDialog(Utilities.getBurpFrame(), scrollPane, "Attack Config", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        Object[] options = {"OK", "Cancel"};
+        int result = JOptionPane.showOptionDialog(Utilities.getBurpFrame(), scrollPane, "Attack Config", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+        //int result = JOptionPane.showConfirmDialog(Utilities.getBurpFrame(), scrollPane, "Attack Config", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_OPTION);
         if (result == JOptionPane.OK_OPTION) {
             for(String key: configured.keySet()) {
                 Object val = configured.get(key);
