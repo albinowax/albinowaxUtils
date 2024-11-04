@@ -77,6 +77,30 @@ public class MontoyaRequestResponse implements HttpRequestResponse {
         return requestResponse.statusCode();
     }
 
+    public short status() {
+        if (requestResponse.hasResponse()) {
+            return requestResponse.response().statusCode();
+        } else {
+            return 0;
+        }
+    }
+
+    public int server() {
+        int serverCode = 0;
+        if (response().hasHeader("Server") && response().headerValue("Server").length() > 3) {
+            serverCode = response().headerValue("Server").substring(0, 3).hashCode();
+        }
+        return serverCode;
+    }
+
+    public int serverStatus() {
+        short status = status();
+        if (status != 0) {
+            return (server() + status);
+        }
+        return status;
+    }
+
     @Override
     public List<Marker> requestMarkers() {
         return requestResponse.requestMarkers();
@@ -130,7 +154,9 @@ public class MontoyaRequestResponse implements HttpRequestResponse {
 
 class TimeLog implements TimingData {
     Duration time;
+    ZonedDateTime timeSent;
     public TimeLog(long time) {
+        this.timeSent = ZonedDateTime.now(); // this is horribly inaccurate
         this.time = Duration.of(time, ChronoUnit.MICROS);
     }
 
@@ -141,11 +167,11 @@ class TimeLog implements TimingData {
 
     @Override
     public Duration timeBetweenRequestSentAndEndOfResponse() {
-        return null;
+        return time;
     }
 
     @Override
     public ZonedDateTime timeRequestSent() {
-        return null;
+        return timeSent;
     }
 }

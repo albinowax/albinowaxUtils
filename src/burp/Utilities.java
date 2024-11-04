@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
@@ -468,7 +469,7 @@ class Utilities {
 
 
     static byte[] replace(byte[] request, String find, String replace) {
-        return replace(request, find.getBytes(), replace.getBytes());
+        return replace(request, find.getBytes(Charset.forName("ISO-8859-1")), replace.getBytes(Charset.forName("ISO-8859-1")));
     }
 
     static IHttpRequestResponse fetchFromSitemap(URL url) {
@@ -481,6 +482,14 @@ class Utilities {
             }
         }
         return null;
+    }
+
+    static public String bytesToHexString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString();
     }
 
     static int countByte(byte[] response, byte match) {
