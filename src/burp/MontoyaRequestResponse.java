@@ -20,6 +20,13 @@ public class MontoyaRequestResponse implements HttpRequestResponse {
 
     HttpRequestResponse requestResponse;
     TimingData time;
+    Long elapsedTime = 0L;
+
+    public boolean timedOut() {
+        return timedOut;
+    }
+
+    boolean timedOut = false;
 
     public MontoyaRequestResponse(HttpRequestResponse requestResponse) {
         this.requestResponse = requestResponse;
@@ -57,6 +64,21 @@ public class MontoyaRequestResponse implements HttpRequestResponse {
         this.time = new TimeLog(time);
     }
 
+    public void setElapsedTime(long elapsedTime) {
+        if (status() == 0) {
+            //int requestTimeout = Utilities.globalSettings.getInt("timeout") * 1000;
+            long requestTimeout = Utilities.burpTimeout;
+            if (elapsedTime > requestTimeout) {
+                timedOut = true;
+            }
+        }
+        this.elapsedTime = elapsedTime;
+    }
+
+    public long elapsedTime() {
+        return elapsedTime;
+    }
+
     @Override
     public String url() {
         return requestResponse.url();
@@ -74,7 +96,7 @@ public class MontoyaRequestResponse implements HttpRequestResponse {
 
     @Override
     public short statusCode() {
-        return requestResponse.statusCode();
+        return status();
     }
 
     public short status() {
@@ -83,6 +105,24 @@ public class MontoyaRequestResponse implements HttpRequestResponse {
         } else {
             return 0;
         }
+    }
+
+    public short nestedStatus() {
+        short topStatus = status();
+        if (topStatus != 100) {
+            return 0;
+        }
+        String body = requestResponse.response().bodyToString();
+        if (!body.startsWith("HTTP/")) {
+            return 0;
+        }
+        short nestedStatus = 0;
+        try {
+            nestedStatus = Short.parseShort(body.substring(9, 12));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+        return nestedStatus;
     }
 
     public int server() {

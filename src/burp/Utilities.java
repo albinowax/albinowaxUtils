@@ -12,6 +12,8 @@ import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import javax.swing.*;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
@@ -1131,8 +1133,29 @@ class Utilities {
         return Arrays.copyOfRange(body, nestedRespStart, body.length);
     }
 
+    public static String encodeBytesAbove7F(String input) {
+        StringBuilder encoded = new StringBuilder();
+
+        // Convert the string to bytes using UTF-8
+        byte[] bytes = input.getBytes(StandardCharsets.ISO_8859_1);
+
+        for (byte b : bytes) {
+            int value = b & 0xFF; // Convert byte to an unsigned int
+            if (value > 0x7F) {
+                // Encode bytes above 0x7F
+                encoded.append(String.format("%%%02X", value));
+            } else {
+                // Append bytes as characters
+                encoded.append((char) value);
+            }
+        }
+
+        return encoded.toString();
+    }
+
     static String encodeParam(String payload) {
-        return payload.replace("%", "%25").replace("\u0000", "%00").replace("&", "%26").replace("#", "%23").replace("\u0020", "%20").replace(";", "%3b").replace("+", "%2b").replace("\n", "%0A").replace("\r", "%0d");
+
+        return encodeBytesAbove7F(payload.replace("%", "%25").replace("\u0000", "%00").replace("&", "%26").replace("#", "%23").replace("\u0020", "%20").replace(";", "%3b").replace("+", "%2b").replace("\n", "%0A").replace("\r", "%0d"));
     }
 
 
