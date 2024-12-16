@@ -32,6 +32,8 @@ public class MontoyaRequestResponse implements HttpRequestResponse {
         this.requestResponse = requestResponse;
         if (requestResponse.timingData().isPresent()) {
             time = requestResponse.timingData().get();
+        } else {
+            setTime(0);
         }
     }
 
