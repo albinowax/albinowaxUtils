@@ -1,7 +1,7 @@
 apply plugin: 'java'
 
-sourceCompatibility = 17
-targetCompatibility = 17
+sourceCompatibility = 21
+targetCompatibility = 21
 
 repositories {
     mavenCentral()
@@ -9,6 +9,7 @@ repositories {
 
 dependencies {
     implementation 'net.portswigger.burp.extender:burp-extender-api:2.3'
+    //implementation files('montoya-api-2024.12.3.jar')
     implementation 'net.portswigger.burp.extensions:montoya-api:2023.10.3'
     implementation 'org.apache.commons:commons-lang3:3.5'
     implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
@@ -24,10 +25,10 @@ sourceSets {
 //        }
     }
 }
+archivesBaseName = ('albinowaxUtils-all')
 
 task fatJar(type: Jar) {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    baseName = project.name + '-all'
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
