@@ -83,6 +83,7 @@ class Resp implements IHttpRequestResponse {
                 this.timedOut = true;
             }
         } else {
+            // fixme responseTime is wrong when using TurboHelper
             if (responseTime > scanTimeout) {
                 this.timedOut = true;
                 if (failed) {

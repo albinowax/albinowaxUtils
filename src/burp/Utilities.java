@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 class Utilities {
 
-    public static final String version = "1.4";
+    public static final String version = "1.5";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -111,6 +111,9 @@ class Utilities {
         helpers = callbacks.getHelpers();
         try {
             burpTimeout = Integer.parseInt(Utilities.getSetting("project_options.connections.timeouts.normal_timeout"));
+            if (burpTimeout > 1000) {
+                burpTimeout = burpTimeout / 1000;
+            }
         } catch (IndexOutOfBoundsException e){
             burpTimeout = 10;
         }
@@ -148,7 +151,7 @@ class Utilities {
         return value;
     }
 
-    static void showError(Exception e) {
+    static void showError(Throwable e) {
         Utilities.out("Error in thread: "+e.getMessage() +". See error pane for stack trace.");
         e.printStackTrace(stderr);
     }
