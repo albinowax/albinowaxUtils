@@ -91,9 +91,9 @@ class Resp implements IHttpRequestResponse {
                 }
             }
         }
-        if (!this.failed) {
-            this.status = Utilities.getCode(req.getResponse());
-        }
+        
+        this.status = Utilities.getCode(req.getResponse());
+
         timestamp = System.currentTimeMillis();
     }
 

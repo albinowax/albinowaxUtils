@@ -10,7 +10,7 @@ repositories {
 dependencies {
     implementation 'net.portswigger.burp.extender:burp-extender-api:2.3'
     //implementation files('montoya-api-2024.12.3.jar')
-    implementation 'net.portswigger.burp.extensions:montoya-api:2023.10.3'
+    implementation 'net.portswigger.burp.extensions:montoya-api:2025.2'
     implementation 'org.apache.commons:commons-lang3:3.5'
     implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.1'
 }
