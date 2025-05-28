@@ -79,7 +79,7 @@ class Resp implements IHttpRequestResponse {
 //        }
 
         if (Utilities.burpTimeout == scanTimeout) {
-            if (failed && responseTime > scanTimeout) {
+            if (responseTime > scanTimeout) {
                 this.timedOut = true;
             }
         } else {
@@ -91,7 +91,7 @@ class Resp implements IHttpRequestResponse {
                 }
             }
         }
-        
+
         this.status = Utilities.getCode(req.getResponse());
 
         timestamp = System.currentTimeMillis();

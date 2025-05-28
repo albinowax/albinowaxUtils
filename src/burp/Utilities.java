@@ -1219,7 +1219,7 @@ class Utilities {
         return HttpRequest.httpRequest(montoyaService, ByteArray.byteArray(baseReq));
     }
 
-    static HttpRequestResponse buildMontoyaResp(Resp resp) {
+    static MontoyaRequestResponse buildMontoyaResp(Resp resp) {
         HttpRequest monReq = buildMontoyaReq(resp.getRequest(), resp.getHttpService());
 
         HttpRequestResponse monReqResp;
