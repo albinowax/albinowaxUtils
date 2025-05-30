@@ -78,18 +78,9 @@ class Resp implements IHttpRequestResponse {
 //            throw new RuntimeException("mmm");
 //        }
 
-        if (Utilities.burpTimeout == scanTimeout) {
-            if (responseTime > scanTimeout) {
-                this.timedOut = true;
-            }
-        } else {
-            // fixme responseTime is wrong when using TurboHelper
-            if (responseTime > scanTimeout) {
-                this.timedOut = true;
-                if (failed) {
-                    Utilities.out("Timeout with response. Start time: " + startTime + " Current time: " + System.currentTimeMillis() + " Difference: " + (System.currentTimeMillis() - startTime) + " Tolerance: " + scanTimeout);
-                }
-            }
+        // fixme responseTime is wrong when using TurboHelper
+        if (responseTime > scanTimeout) {
+            this.timedOut = true;
         }
 
         this.status = Utilities.getCode(req.getResponse());

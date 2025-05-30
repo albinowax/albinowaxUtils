@@ -69,7 +69,7 @@ public class MontoyaRequestResponse implements HttpRequestResponse {
     public void setElapsedTime(long elapsedTime) {
         if (status() == 0) {
             //int requestTimeout = Utilities.globalSettings.getInt("timeout") * 1000;
-            long requestTimeout = Utilities.burpTimeout;
+            long requestTimeout = Utilities.globalSettings.getInt("timeout") * 1000; // Utilities.burpTimeout;
             if (elapsedTime > requestTimeout) {
                 timedOut = true;
             }

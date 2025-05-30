@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 class Utilities {
 
-    public static final String version = "1.6";
+    public static final String version = "1.61";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
@@ -125,7 +125,7 @@ class Utilities {
 
         if (settings != null) {
             globalSettings = new ConfigurableSettings(settings);
-            globalSettings.registerSetting("timeout", burpTimeout, "The time after quick a response is considered to have timed out. Tweak with caution, and be sure to adjust Burp's request timeout to match.");
+            globalSettings.registerSetting("timeout", 10, "The time after quick a response is considered to have timed out. Tweak with caution.");
 
             if (DEBUG) {
                 globalSettings.printSettings();
