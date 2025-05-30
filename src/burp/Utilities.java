@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 class Utilities {
 
-    public static final String version = "1.5";
+    public static final String version = "1.6";
     public static String name = "uninitialised";
     private static PrintWriter stdout;
     private static PrintWriter stderr;
