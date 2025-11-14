@@ -139,6 +139,11 @@ class Utilities {
         return callbacks.getBurpVersion()[0].contains("Professional");
     }
 
+    static boolean isBurpDAST() {
+        String version = callbacks.getBurpVersion()[0];
+        return version.contains("Enterprise") || version.contains("DAST");
+    }
+
     static String getResource(String name) {
         return new Scanner(Utilities.class.getResourceAsStream(name), "UTF-8").useDelimiter("\\A").next();
     }
@@ -1040,10 +1045,12 @@ class Utilities {
     }
 
     static byte[] convertToHttp1(byte[] req) {
-        // ISO-8859-1 has a 1-to-1 encoding between strings and bytes
-        String tmp = new String(req, StandardCharsets.ISO_8859_1);
-        tmp = tmp.replaceFirst("HTTP/2", "HTTP/1.1");
-        return tmp.getBytes(StandardCharsets.ISO_8859_1);
+        return Utilities.replaceFirst(req, " HTTP/2\r\n".getBytes(), " HTTP/1.1\r\n".getBytes());
+    }
+
+    static HttpRequest convertToHttp1(HttpRequest request) {
+        byte[] req = Utilities.convertToHttp1(request.toByteArray().getBytes());
+        return HttpRequest.httpRequest(request.httpService(), ByteArray.byteArray(req));
     }
 
     static IHttpRequestResponse attemptRequest_deprecated(IHttpService service, byte[] req) {
