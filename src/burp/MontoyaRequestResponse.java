@@ -127,6 +127,31 @@ public class MontoyaRequestResponse implements HttpRequestResponse {
         return nestedStatus;
     }
 
+    /**
+     * Returns the effective status code, handling 100 Continue responses.
+     * If response is 100 Continue with a nested HTTP response in body,
+     * returns nested_code * 10 (e.g., 404 -> 4040).
+     * Otherwise returns the normal status code.
+     */
+    public int effectiveStatusCode() {
+        short topStatus = status();
+        if (topStatus != 100) {
+            return topStatus;
+        }
+
+        String body = requestResponse.response().bodyToString();
+        if (!body.startsWith("HTTP/")) {
+            return 100;  // No nested response, return as-is
+        }
+
+        try {
+            short nestedStatus = Short.parseShort(body.substring(9, 12));
+            return nestedStatus * 10;  // 404 -> 4040
+        } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+            return 100;  // Parse failed, return top-level status
+        }
+    }
+
     public int server() {
         int serverCode = 0;
         if (response().hasHeader("Server") && response().headerValue("Server").length() > 3) {

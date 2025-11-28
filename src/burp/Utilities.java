@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-class Utilities {
+public class Utilities {
 
     public static final String version = "1.61";
     public static String name = "uninitialised";
@@ -48,7 +48,7 @@ class Utilities {
     static IBurpExtenderCallbacks callbacks;
     static IExtensionHelpers helpers;
 
-    static MontoyaApi montoyaApi;
+    public static MontoyaApi montoyaApi;
     static HashSet<String> phpFunctions = new HashSet<>();
     static HashSet<String> wafParams = new HashSet<>();
     static ArrayList<String> paramNames = new ArrayList<>();
